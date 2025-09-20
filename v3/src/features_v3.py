@@ -11,11 +11,53 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 from .panel_builder_v3 import POI_CORE_COLUMNS, TARGET_CUTOFF
-from .projection_v3 import apply_projection
+from .projection_v3 import apply_projection, collect_projection_drift
 
 logger = logging.getLogger(__name__)
 
 __all__ = ["build_feature_matrix_v3"]
+
+POI_SUPPLEMENTAL_COLUMNS = [
+    "bus_station_cnt",
+    "catering",
+    "commercial_area",
+    "education",
+    "education_training_school_education_kindergarten",
+    "education_training_school_education_middle_school",
+    "education_training_school_education_primary_school",
+    "education_training_school_education_research_institution",
+    "hotel",
+    "leisure_and_entertainment",
+    "leisure_entertainment_cultural_venue_cultural_palace",
+    "leisure_entertainment_entertainment_venue_game_arcade",
+    "leisure_entertainment_entertainment_venue_party_house",
+    "medical_health",
+    "medical_health_blood_donation_station",
+    "medical_health_clinic",
+    "medical_health_disease_prevention_institution",
+    "medical_health_first_aid_center",
+    "medical_health_general_hospital",
+    "medical_health_pharmaceutical_healthcare",
+    "medical_health_physical_examination_institution",
+    "medical_health_rehabilitation_institution",
+    "medical_health_specialty_hospital",
+    "medical_health_tcm_hospital",
+    "medical_health_veterinary_station",
+    "office_building",
+    "office_building_industrial_building_industrial_building",
+    "rentable_shops",
+    "residential_area",
+    "retail",
+    "subway_station_cnt",
+    "transportation_facilities_service_airport_related",
+    "transportation_facilities_service_bus_station",
+    "transportation_facilities_service_light_rail_station",
+    "transportation_facilities_service_long_distance_bus_station",
+    "transportation_facilities_service_port_terminal",
+    "transportation_facilities_service_subway_station",
+    "transportation_facilities_service_train_station",
+    "transportation_station",
+]
 
 RAW_MONTHLY_COLUMNS = [
     "amount_new_house_transactions",
@@ -129,6 +171,9 @@ TIME_FEATURES = [
 
 SEARCH_VARIANCE_LIMIT = 12
 
+FEATURE_COUNT_MIN = 537
+FEATURE_COUNT_MAX = 567
+
 
 def build_feature_matrix_v3(
     panel_path: Path | str,
@@ -139,12 +184,18 @@ def build_feature_matrix_v3(
     """Construct the v3 feature matrix following the published specification."""
 
     panel_path = Path(panel_path)
+    reports_path = Path(reports_dir) if reports_dir is not None else None
+
     features_df = pd.read_parquet(panel_path)
     features_df["month"] = pd.to_datetime(features_df["month"], errors="coerce")
     features_df = features_df.sort_values(["month", "sector_id"]).reset_index(drop=True)
 
+    original_df = features_df.copy()
     forecast_start_ts = pd.Timestamp(forecast_start).to_period("M").to_timestamp()
     features_df = apply_projection(features_df, forecast_start_ts)
+
+    if reports_path is not None:
+        collect_projection_drift(original_df, features_df, forecast_start_ts, reports_path)
 
     # Ensure targets after cutoff remain NaN
     features_df.loc[features_df["month"] > TARGET_CUTOFF, "target"] = np.nan
@@ -154,15 +205,6 @@ def build_feature_matrix_v3(
 
     _add_time_features(features_df)
     categories["time"].extend(TIME_FEATURES)
-    features_df["population_weight"] = np.where(
-        features_df["resident_population"] > 0,
-        features_df["resident_population"],
-        np.where(
-            features_df["population_scale"] > 0,
-            features_df["population_scale"],
-            1.0,
-        ),
-    )
     categories["raw"].extend([
         col for col in RAW_MONTHLY_COLUMNS if col in features_df.columns
     ])
@@ -178,7 +220,6 @@ def build_feature_matrix_v3(
     categories["raw"].extend(
         [col for col in POI_CORE_COLUMNS if col in features_df.columns]
     )
-    categories["raw"].append("population_weight")
     categories["raw"].append("sector_id")
 
     features_df = _add_missing_flags(features_df, forecast_start_ts, missing_report)
@@ -215,17 +256,9 @@ def build_feature_matrix_v3(
     categories["share"].extend(share_features)
     categories["weighted_mean"].extend(weighted_features)
 
-    log_sources = [col for col in RAW_MONTHLY_COLUMNS if col in features_df.columns]
-    log_sources.extend(growth_features)
-    log_sources.extend(weighted_features)
-    log_sources.extend(share_features)
-    log_features = _create_log1p_features(features_df, log_sources)
-    categories["log1p"].extend(log_features)
-
     search_report_path = None
-    if reports_dir is not None:
-        reports_dir = Path(reports_dir)
-        search_report_path = reports_dir / "search_keywords_v3.json"
+    if reports_path is not None:
+        search_report_path = reports_path / "search_keywords_v3.json"
     selected_search = _select_search_keywords(
         features_df, forecast_start_ts, SEARCH_VARIANCE_LIMIT, search_report_path
     )
@@ -234,8 +267,14 @@ def build_feature_matrix_v3(
     categories["search"].extend(search_features)
     categories["missing_flags"].extend([f"{col}_was_missing" for col in selected_search])
 
-    poi_features = _create_poi_pca(features_df, reports_dir)
+    poi_features = _create_poi_pca(features_df, reports_path)
     categories["poi_pca"].extend(poi_features)
+
+    supplemental_cols = [
+        col for col in POI_SUPPLEMENTAL_COLUMNS if col in features_df.columns
+    ]
+    if supplemental_cols:
+        features_df.drop(columns=supplemental_cols, inplace=True)
 
     # Remove unselected search columns
     _drop_unselected_search_columns(features_df, selected_search)
@@ -247,21 +286,39 @@ def build_feature_matrix_v3(
     ]
     if projection_meta_cols:
         features_df.drop(columns=projection_meta_cols, inplace=True)
-    projection_flag_cols = [
-        col
-        for col in features_df.columns
-        if "_proj_source" in col or "_proj_overridden" in col
-    ]
-    if projection_flag_cols:
-        features_df.drop(columns=projection_flag_cols, inplace=True)
     redundant_missing = [
         col for col in features_df.columns if col.endswith("_was_missing_was_missing")
     ]
     if redundant_missing:
         features_df.drop(columns=redundant_missing, inplace=True)
 
-    if reports_dir is not None:
-        reports_path = Path(reports_dir)
+    log_sources: List[str] = []
+    seen_sources: set[str] = set()
+    for group in (
+        [col for col in METRIC_SET_FULL if col in features_df.columns],
+        [col for col in growth_features if col in features_df.columns],
+        [col for col in share_features if col in features_df.columns],
+        [col for col in weighted_features if col in features_df.columns],
+    ):
+        for column in group:
+            if column in seen_sources:
+                continue
+            log_sources.append(column)
+            seen_sources.add(column)
+
+    mandatory_log_columns = [
+        "amount_new_house_transactions_lag_1",
+        "amount_new_house_transactions_rolling_mean_3",
+    ]
+    for column in mandatory_log_columns:
+        if column in features_df.columns and column not in seen_sources:
+            log_sources.append(column)
+            seen_sources.add(column)
+
+    log_features = _create_log1p_features(features_df, log_sources)
+    categories["log1p"].extend(log_features)
+
+    if reports_path is not None:
         reports_path.mkdir(parents=True, exist_ok=True)
         missing_path = reports_path / "missing_value_report.json"
         with missing_path.open("w", encoding="utf-8") as handle:
@@ -270,7 +327,7 @@ def build_feature_matrix_v3(
     inventory = _build_inventory(features_df, categories)
     feature_columns = inventory["feature_columns"]
 
-    if not 537 <= len(feature_columns) <= 567:
+    if not FEATURE_COUNT_MIN <= len(feature_columns) <= FEATURE_COUNT_MAX:
         counts = {k: len(v) for k, v in inventory["by_category"].items()}
         categorized = set().union(*inventory["by_category"].values())
         uncategorized = sorted(set(feature_columns) - categorized)
@@ -286,8 +343,8 @@ def build_feature_matrix_v3(
         export_df["year"] = export_df["month"].dt.year.astype(np.int16)
         export_df.to_parquet(features_path, index=False, partition_cols=["year"])
 
-    if reports_dir is not None:
-        inventory_path = Path(reports_dir) / "feature_inventory_v3.json"
+    if reports_path is not None:
+        inventory_path = reports_path / "feature_inventory_v3.json"
         with inventory_path.open("w", encoding="utf-8") as handle:
             json.dump({k: v for k, v in inventory.items() if k != "feature_columns"}, handle, indent=2, ensure_ascii=False)
 
@@ -596,29 +653,54 @@ def _create_growth_features(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
 def _create_share_features(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     share_cols: List[str] = []
     weighted_cols: List[str] = []
-    weight = df["population_weight"].replace(0.0, 1.0)
+    resident = df.get("resident_population")
+    population_scale = df.get("population_scale")
+    if resident is None or population_scale is None:
+        return share_cols, weighted_cols
+
+    resident_values = resident.astype(float)
+    scale_values = population_scale.astype(float)
+    weights_array = np.where(
+        resident_values > 0,
+        resident_values,
+        np.where(scale_values > 0, scale_values, 1.0),
+    )
+    weights = pd.Series(np.nan_to_num(weights_array, nan=1.0), index=df.index)
     for metric in SHARE_METRICS:
         if metric not in df.columns:
             continue
+        metric_values = df[metric].astype(float)
         weighted_col = f"{metric}_city_weighted_mean"
         share_col = f"{metric}_share"
-        numerator = (df[metric] * weight)
-        denom = df.groupby("month")["population_weight"].transform("sum")
-        with np.errstate(invalid="ignore"):
-            city_weighted = numerator.groupby(df["month"]).transform("sum") / np.where(denom == 0, 1.0, denom)
-        city_weighted = city_weighted.fillna(df[metric].mean())
+
+        weighted_sum = (metric_values * weights).groupby(df["month"]).transform("sum")
+        weight_sum = weights.groupby(df["month"]).transform("sum")
+        with np.errstate(divide="ignore", invalid="ignore"):
+            city_weighted = weighted_sum / weight_sum.replace(0.0, np.nan)
+        month_mean = metric_values.groupby(df["month"]).transform("mean")
+        global_mean = float(metric_values.mean()) if not metric_values.dropna().empty else 0.0
+        city_weighted = city_weighted.fillna(month_mean)
+        city_weighted = city_weighted.fillna(global_mean)
         df[weighted_col] = city_weighted.fillna(0.0)
-        df[share_col] = df[metric] / (df[weighted_col] + 1e-6)
+
+        df[share_col] = metric_values / (df[weighted_col] + 1e-6)
         df[share_col] = df[share_col].replace([np.inf, -np.inf], 0.0).fillna(0.0)
         share_cols.append(share_col)
         weighted_cols.append(weighted_col)
     return share_cols, weighted_cols
 
 
-def _create_log1p_features(df: pd.DataFrame, columns: Iterable[str]) -> List[str]:
-    created = []
-    seen = set()
+def _create_log1p_features(
+    df: pd.DataFrame,
+    columns: Iterable[str],
+    max_new_features: int | None = None,
+    seen: set[str] | None = None,
+) -> List[str]:
+    created: List[str] = []
+    seen = set() if seen is None else seen
     for column in columns:
+        if max_new_features is not None and len(created) >= max_new_features:
+            break
         if column not in df.columns or column in seen:
             continue
         log_col = f"{column}_log1p"

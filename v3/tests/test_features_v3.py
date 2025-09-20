@@ -112,8 +112,13 @@ def test_feature_counts_and_categories(tmp_path: Path):
     assert 537 <= inventory["total_features"] <= 567
     assert "amount_new_house_transactions_log1p" in features_df.columns
     assert "amount_new_house_transactions_lag_1" in features_df.columns
+    assert "amount_new_house_transactions_lag_1_log1p" in features_df.columns
+    assert "amount_new_house_transactions_rolling_mean_3_log1p" in features_df.columns
+    assert "amount_new_house_transactions_growth_1_log1p" in features_df.columns
+    assert "amount_new_house_transactions_share_log1p" in features_df.columns
     assert "search_kw_kw0_pct_change_1" in features_df.columns
     assert "poi_pca_1" in features_df.columns
+    assert "bus_station_cnt" not in features_df.columns
     assert "selected_search_keywords" in metadata
     assert len(metadata["selected_search_keywords"]) <= 12
 
@@ -130,3 +135,4 @@ def test_feature_counts_and_categories(tmp_path: Path):
         inventory_payload = json.load(handle)
     assert "by_category" in inventory_payload
     assert "log1p" in inventory_payload["by_category"]
+    assert "weighted_mean" in inventory_payload["by_category"]

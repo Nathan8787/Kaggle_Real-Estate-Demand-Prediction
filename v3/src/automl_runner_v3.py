@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -33,6 +34,47 @@ class FoldResult:
     model_path: Path
 
 
+class _ProgressPrinter:
+    """Render a lightweight console progress bar for long-running stages."""
+
+    def __init__(self, total: int, label: str = "Progress") -> None:
+        self.total = max(int(total), 1)
+        self.label = label
+        self.current = 0
+        self._last_length = 0
+
+    def _render(self, message: str) -> None:
+        ratio = self.current / self.total
+        bar_size = 24
+        filled = int(round(bar_size * ratio))
+        bar = "█" * filled + "░" * (bar_size - filled)
+        display = f"{self.label}: [{bar}] {self.current}/{self.total} {message}"
+        padding = max(0, self._last_length - len(display))
+        sys.stdout.write("\r" + display + " " * padding)
+        sys.stdout.flush()
+        self._last_length = len(display)
+
+    def announce(self, message: str) -> None:
+        """Update the status message without advancing progress."""
+
+        self._render(message)
+
+    def step(self, message: str) -> None:
+        """Advance the progress bar and update the message."""
+
+        self.current = min(self.current + 1, self.total)
+        self._render(message)
+        if self.current == self.total:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+
+    def close(self) -> None:
+        if self.current < self.total:
+            self._render("stopped")
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+
+
 def _load_config(config_path: Path) -> Dict[str, object]:
     config_path = Path(config_path)
     with config_path.open("r", encoding="utf-8") as handle:
@@ -62,7 +104,7 @@ def _ensure_directories(models_dir: Path, reports_dir: Path, logs_dir: Path) -> 
 
 
 def _select_feature_columns(features_df: pd.DataFrame) -> List[str]:
-    exclude = {"month", "id"}
+    exclude = {"month", "id", "target"}
     if "target" not in features_df.columns:
         raise KeyError("features_df must contain a 'target' column")
     feature_cols = [col for col in features_df.columns if col not in exclude]
@@ -71,6 +113,72 @@ def _select_feature_columns(features_df: pd.DataFrame) -> List[str]:
 
 def _split_float_columns(df: pd.DataFrame) -> List[str]:
     return df.select_dtypes(include=["float32", "float64"]).columns.tolist()
+
+
+def _resolve_metric(metric_setting) -> Tuple[object, str]:
+    """Map configuration metric names to FLAML-compatible callables."""
+
+    if isinstance(metric_setting, str):
+        if metric_setting.lower() == "competition_score":
+            return flaml_competition_metric, "competition_score"
+        return metric_setting, metric_setting
+    if callable(metric_setting):
+        return metric_setting, getattr(metric_setting, "__name__", "custom_metric")
+    return metric_setting, str(metric_setting)
+
+
+def _register_metric(automl: AutoML, metric_param, metric_label: str):
+    """Register custom metrics with FLAML when supported."""
+
+    metric_for_fit = metric_param
+    if callable(metric_param):
+        if hasattr(automl, "add_metric"):
+            kwargs = {}
+            greater_flag = getattr(metric_param, "greater_is_better", None)
+            if greater_flag is None and metric_label == "competition_score":
+                greater_flag = True
+            if greater_flag is not None:
+                kwargs["greater_is_better"] = bool(greater_flag)
+            try:
+                automl.add_metric(metric_label, metric_param, **kwargs)
+            except TypeError:
+                automl.add_metric(metric_label, metric_param)
+            metric_for_fit = metric_label
+        else:
+            logger.warning(
+                "AutoML.add_metric not available; passing metric callable directly"
+            )
+    return metric_for_fit
+
+
+def flaml_competition_metric(
+    X_train,
+    y_train,
+    estimator,
+    labels,
+    X_val,
+    y_val,
+    weight_val=None,
+    weight_train=None,
+    *args,
+    **kwargs,
+):
+    """Adapter registering the competition metric with FLAML."""
+
+    loss, info = competition_metric(
+        X_val=X_val,
+        y_val=y_val,
+        estimator=estimator,
+        labels=labels,
+        X_train=X_train,
+        y_train=y_train,
+        weight_val=weight_val,
+        weight_train=weight_train,
+    )
+    return loss, info
+
+
+flaml_competition_metric.greater_is_better = True
 
 
 def _apply_scaler(
@@ -184,6 +292,10 @@ def run_cross_validation(
     folds = generate_time_series_folds_v3(ordered_df, reports_dir=reports_dir)
     feature_cols = _select_feature_columns(ordered_df)
 
+    metric_param, metric_label = _resolve_metric(config["metric"])
+    total_folds = len(folds)
+    progress = _ProgressPrinter(total_folds, label="Cross-validation") if total_folds else None
+
     fold_metrics: List[Dict[str, object]] = []
     fold_results: List[FoldResult] = []
     fold_scores: List[float] = []
@@ -191,6 +303,10 @@ def run_cross_validation(
     best_overall_config: Optional[Dict[str, object]] = None
 
     for fold_id, (train_idx, valid_idx) in enumerate(folds, start=1):
+        if progress:
+            progress.announce(
+                f"Fold {fold_id}/{total_folds}: preparing datasets"
+            )
         train_slice = ordered_df.loc[train_idx].copy()
         valid_slice = ordered_df.loc[valid_idx].copy()
 
@@ -198,6 +314,8 @@ def run_cross_validation(
         valid_slice = valid_slice[valid_slice["target"].notna()]
         if train_slice.empty or valid_slice.empty:
             logger.warning("Fold %s skipped due to insufficient labeled data", fold_id)
+            if progress:
+                progress.step(f"Fold {fold_id} skipped")
             continue
 
         X_train = train_slice[feature_cols].copy()
@@ -218,11 +336,22 @@ def run_cross_validation(
         _save_scaler_artifacts(scaler, float_cols, scaler_path, scaler_report_path)
 
         automl = AutoML()
+        metric_for_fit = _register_metric(automl, metric_param, metric_label)
+        if progress:
+            progress.announce(
+                f"Fold {fold_id}/{total_folds}: AutoML search"
+            )
+        logger.info(
+            "Fold %s/%s: running AutoML search for %.0f seconds",
+            fold_id,
+            total_folds,
+            float(config["time_budget_per_fold"]),
+        )
         automl.fit(
             X_train=X_train.values,
             y_train=y_train_log,
             task=config["task"],
-            metric=competition_metric,
+            metric=metric_for_fit,
             estimator_list=config["estimator_list"],
             time_budget=float(config["time_budget_per_fold"]),
             n_jobs=int(config["n_jobs"]),
@@ -234,33 +363,41 @@ def run_cross_validation(
             seed=int(config["seed"]),
         )
         best_iteration = getattr(automl, "best_iteration", None)
-        if best_iteration is not None and best_iteration < int(config["min_trials_per_fold"]):
-            logger.info(
-                "Fold %s completed %s trials; extending search to meet minimum %s",
-                fold_id,
-                best_iteration,
-                config["min_trials_per_fold"],
-            )
-            automl.fit(
-                X_train=X_train.values,
-                y_train=y_train_log,
-                task=config["task"],
-                metric=competition_metric,
-                estimator_list=config["estimator_list"],
-                time_budget=float(config["time_budget_per_fold"]),
-                n_jobs=int(config["n_jobs"]),
-                eval_method="holdout",
-                X_val=X_valid.values,
-                y_val=y_valid_log,
-                verbose=0,
-                fit_kwargs_by_estimator={"xgboost": config.get("fit_kwargs", {})},
-                seed=int(config["seed"]),
-            )
-            best_iteration = getattr(automl, "best_iteration", None)
+        min_trials = int(config["min_trials_per_fold"])
+        if best_iteration is not None and best_iteration < min_trials:
+            extra_budget = max(0.0, 1200.0 - float(config["time_budget_per_fold"]))
+            if extra_budget > 0:
+                logger.info(
+                    "Fold %s completed %s trials; extending search with %.0f additional seconds",
+                    fold_id,
+                    best_iteration,
+                    extra_budget,
+                )
+                if progress:
+                    progress.announce(
+                        f"Fold {fold_id}/{total_folds}: extending search"
+                    )
+                automl.fit(
+                    X_train=X_train.values,
+                    y_train=y_train_log,
+                    task=config["task"],
+                    metric=metric_for_fit,
+                    estimator_list=config["estimator_list"],
+                    time_budget=extra_budget,
+                    n_jobs=int(config["n_jobs"]),
+                    eval_method="holdout",
+                    X_val=X_valid.values,
+                    y_val=y_valid_log,
+                    verbose=0,
+                    fit_kwargs_by_estimator={"xgboost": config.get("fit_kwargs", {})},
+                    seed=int(config["seed"]),
+                )
+                best_iteration = getattr(automl, "best_iteration", None)
 
         best_config = automl.best_config.copy()
         params = _merge_config_with_fit_kwargs(best_config, config.get("fit_kwargs", {}), int(config["seed"]))
         params.setdefault("n_estimators", best_config.get("n_estimators", 500))
+        logger.info("Fold %s/%s: retraining best configuration", fold_id, total_folds)
         model = XGBRegressor(**params)
         model.fit(
             X_train.values,
@@ -281,8 +418,10 @@ def run_cross_validation(
             {
                 "id": valid_slice.get("id"),
                 "month": valid_slice["month"],
+                "sector_id": valid_slice["sector_id"],
                 "target": y_valid_raw,
                 "prediction": y_pred,
+                "target_available_flag": valid_slice.get("target_available_flag"),
             }
         )
         prediction_path = reports_dir / f"predictions_fold_{fold_id}.parquet"
@@ -307,6 +446,9 @@ def run_cross_validation(
 
         _log_trials(automl, fold_id, logs_dir / "automl_trials.csv")
 
+        if progress:
+            progress.step(f"Fold {fold_id} score={metrics['competition_score']:.3f}")
+
     if fold_metrics:
         metrics_df = pd.DataFrame(fold_metrics)
         metrics_df.to_csv(reports_dir / "fold_metrics_v3.csv", index=False)
@@ -317,6 +459,7 @@ def run_cross_validation(
         "avg_score": float(np.mean(fold_scores)) if fold_scores else None,
         "feature_count": len(feature_cols),
         "target_transform": "log1p_expm1",
+        "metric": metric_label,
     }
     with (reports_dir / "automl_summary.json").open("w", encoding="utf-8") as handle:
         json.dump(summary, handle, indent=2, ensure_ascii=False)
@@ -392,6 +535,10 @@ def train_holdout_model(
     y_pred_log = model.predict(X_valid.values)
     y_pred = np.clip(np.expm1(y_pred_log), 0.0, None)
     metrics = _compute_metrics(y_valid_raw, y_pred)
+
+    prediction_frame = valid_slice[["id", "month", "sector_id", "target", "target_available_flag"]].copy()
+    prediction_frame["prediction"] = y_pred
+    prediction_frame.to_parquet(reports_dir / "predictions_holdout.parquet", index=False)
 
     metrics_path = reports_dir / "holdout_metrics_v3.json"
     payload = {
@@ -469,6 +616,7 @@ def run_training_pipeline(
     reports_dir: Path | str = Path("reports_v3"),
     logs_dir: Path | str = Path("logs_v3"),
 ) -> Dict[str, object]:
+    logger.info("Starting cross-validation pipeline")
     fold_results, summary = run_cross_validation(
         features_df,
         config_path=config_path,
@@ -482,6 +630,7 @@ def run_training_pipeline(
     best_config = summary.get("best_config") or fold_results[0].config
     config = _load_config(Path(config_path))
 
+    logger.info("Training holdout model with best configuration")
     holdout_metrics = train_holdout_model(
         features_df,
         best_config,
@@ -489,6 +638,12 @@ def run_training_pipeline(
         reports_dir=reports_dir,
         config=config,
     )
+    logger.info(
+        "Holdout performance: score=%.3f, MAPE=%.3f",
+        holdout_metrics.get("competition_score", float("nan")),
+        holdout_metrics.get("MAPE", float("nan")),
+    )
+    logger.info("Training full model on all available history")
     train_full_model(
         features_df,
         best_config,
