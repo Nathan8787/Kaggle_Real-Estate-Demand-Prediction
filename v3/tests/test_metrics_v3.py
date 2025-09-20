@@ -1,5 +1,8 @@
-﻿import numpy as np
-from src.metrics_v2 import competition_metric, competition_score
+from __future__ import annotations
+
+import numpy as np
+
+from src.metrics_v3 import competition_metric, competition_score
 
 
 class DummyEstimator:
