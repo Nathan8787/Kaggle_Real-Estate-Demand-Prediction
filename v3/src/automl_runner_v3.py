@@ -62,7 +62,7 @@ def _ensure_directories(models_dir: Path, reports_dir: Path, logs_dir: Path) -> 
 
 
 def _select_feature_columns(features_df: pd.DataFrame) -> List[str]:
-    exclude = {"month", "id"}
+    exclude = {"month", "id", "target"}
     if "target" not in features_df.columns:
         raise KeyError("features_df must contain a 'target' column")
     feature_cols = [col for col in features_df.columns if col not in exclude]
@@ -263,29 +263,32 @@ def run_cross_validation(
             seed=int(config["seed"]),
         )
         best_iteration = getattr(automl, "best_iteration", None)
-        if best_iteration is not None and best_iteration < int(config["min_trials_per_fold"]):
-            logger.info(
-                "Fold %s completed %s trials; extending search to meet minimum %s",
-                fold_id,
-                best_iteration,
-                config["min_trials_per_fold"],
-            )
-            automl.fit(
-                X_train=X_train.values,
-                y_train=y_train_log,
-                task=config["task"],
-                metric=config["metric"],
-                estimator_list=config["estimator_list"],
-                time_budget=float(config["time_budget_per_fold"]),
-                n_jobs=int(config["n_jobs"]),
-                eval_method="holdout",
-                X_val=X_valid.values,
-                y_val=y_valid_log,
-                verbose=0,
-                fit_kwargs_by_estimator={"xgboost": config.get("fit_kwargs", {})},
-                seed=int(config["seed"]),
-            )
-            best_iteration = getattr(automl, "best_iteration", None)
+        min_trials = int(config["min_trials_per_fold"])
+        if best_iteration is not None and best_iteration < min_trials:
+            extra_budget = max(0.0, 1200.0 - float(config["time_budget_per_fold"]))
+            if extra_budget > 0:
+                logger.info(
+                    "Fold %s completed %s trials; extending search with %.0f additional seconds",
+                    fold_id,
+                    best_iteration,
+                    extra_budget,
+                )
+                automl.fit(
+                    X_train=X_train.values,
+                    y_train=y_train_log,
+                    task=config["task"],
+                    metric=config["metric"],
+                    estimator_list=config["estimator_list"],
+                    time_budget=extra_budget,
+                    n_jobs=int(config["n_jobs"]),
+                    eval_method="holdout",
+                    X_val=X_valid.values,
+                    y_val=y_valid_log,
+                    verbose=0,
+                    fit_kwargs_by_estimator={"xgboost": config.get("fit_kwargs", {})},
+                    seed=int(config["seed"]),
+                )
+                best_iteration = getattr(automl, "best_iteration", None)
 
         best_config = automl.best_config.copy()
         params = _merge_config_with_fit_kwargs(best_config, config.get("fit_kwargs", {}), int(config["seed"]))
