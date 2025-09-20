@@ -1,0 +1,14 @@
+﻿seed: 42
+time_budget: 10
+metric: competition_score
+estimator_list:
+  - lgbm
+  - xgboost
+  - rf
+  - catboost
+  - extra_tree
+  - lrl1
+  - lrl2
+  - kneighbor
+log_file: ../logs/automl.log
+n_jobs: -1

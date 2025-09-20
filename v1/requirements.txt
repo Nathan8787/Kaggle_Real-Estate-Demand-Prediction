@@ -1,0 +1,13 @@
+﻿pandas
+numpy
+pyarrow
+scikit-learn
+category-encoders
+scipy
+Unidecode
+PyYAML
+flaml
+lightgbm
+xgboost
+catboost
+joblib

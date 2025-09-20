@@ -1,0 +1,1726 @@
+{
+  "num_new_house_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_per_unit_new_house_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_available_for_sale": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_available_for_sale": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_new_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_per_unit_new_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_available_for_sale_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_available_for_sale_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 79,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_new_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_per_unit_new_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_available_for_sale_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_available_for_sale_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_new_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_per_unit_new_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_new_house_available_for_sale_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_new_house_available_for_sale_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_pre_owned_house_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_pre_owned_house_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_pre_owned_house_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_pre_owned_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_pre_owned_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_pre_owned_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1264,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_pre_owned_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1185,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_pre_owned_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1185,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_pre_owned_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1185,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_pre_owned_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1185,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "area_pre_owned_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1185,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "amount_pre_owned_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1185,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_land_transactions": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "construction_area": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "planned_building_area": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transaction_amount": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_land_transactions_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "construction_area_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "planned_building_area_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transaction_amount_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 632,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_land_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "construction_area_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "planned_building_area_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transaction_amount_nearby_sectors": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "num_land_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "construction_area_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "planned_building_area_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transaction_amount_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 1659,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_shops": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_leisure_and_entertainment_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_other_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_other_anchor_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_home_appliance_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_skincare_cosmetics_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_fashion_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_service_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_jewelry_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_lifestyle_leisure_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_supermarket_convenience_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_catering_food_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_residential_commercial": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_office_building_commercial": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_commercial_buildings": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_hypermarkets": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_department_stores": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_shopping_centers": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_hotel_commercial": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_third_tier_shopping_malls_in_business_district": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_second_tier_shopping_malls_in_business_district": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_city_winner_malls": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_shopping_malls_with_street_facing_shops": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_unranked_malls": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_community_malls": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_community_winner_malls": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_key_focus_malls": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "population_scale_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "residential_area_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "office_building_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "commercial_area_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "resident_population_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "office_population_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "number_of_shops_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "catering_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "retail_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "hotel_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "education_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "leisure_and_entertainment_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "bus_station_cnt_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "subway_station_cnt_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "rentable_shops_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "leisure_entertainment_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "other_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "other_anchor_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "home_appliance_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "skincare_cosmetics_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "fashion_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "service_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "jewelry_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "lifestyle_leisure_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "supermarket_convenience_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "catering_food_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "residential_commercial_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "office_building_commercial_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "commercial_buildings_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "hypermarkets_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "department_stores_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "shopping_centers_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "hotel_commercial_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "third_tier_shopping_malls_in_business_district_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "second_tier_shopping_malls_in_business_district_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "city_winner_malls_dense": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "shopping_malls_with_street_facing_shops_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "unranked_malls_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "community_malls_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "community_winner_malls_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "key_focus_malls_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_bus_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_subway_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_airport_related_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_port_terminal_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_train_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_light_rail_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "transportation_facilities_service_long_distance_bus_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "leisure_entertainment_entertainment_venue_game_arcade_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "leisure_entertainment_entertainment_venue_party_house_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "leisure_entertainment_cultural_venue_cultural_palace_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "office_building_industrial_building_industrial_building_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_specialty_hospital_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_tcm_hospital_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_physical_examination_institution_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_veterinary_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_pharmaceutical_healthcare_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_rehabilitation_institution_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_first_aid_center_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_blood_donation_station_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_disease_prevention_institution_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_general_hospital_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "medical_health_clinic_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "education_training_school_education_middle_school_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "education_training_school_education_primary_school_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "education_training_school_education_kindergarten_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "education_training_school_education_research_institution_dense": {
+    "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
+    "filled_sector_ffill": 0,
+    "filled_sector_rolling": 0,
+    "filled_city_median": 790,
+    "filled_global_median": 0,
+    "filled_zero": 0
+  },
+  "target_filled": {
+    "strategy": "fill_zero",
+    "filled": 0
+  },
+  "price_new_house_transactions": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 79,
+    "filled_global_median": 0
+  },
+  "total_price_per_unit_new_house_transactions": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 79,
+    "filled_global_median": 0
+  },
+  "price_new_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 79,
+    "filled_global_median": 0
+  },
+  "total_price_per_unit_new_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 79,
+    "filled_global_median": 0
+  },
+  "price_new_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1264,
+    "filled_global_median": 0
+  },
+  "total_price_per_unit_new_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1264,
+    "filled_global_median": 0
+  },
+  "price_new_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1264,
+    "filled_global_median": 0
+  },
+  "total_price_per_unit_new_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1264,
+    "filled_global_median": 0
+  },
+  "price_pre_owned_house_transactions": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1264,
+    "filled_global_median": 0
+  },
+  "price_pre_owned_house_transactions_synthetic": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1264,
+    "filled_global_median": 0
+  },
+  "price_pre_owned_house_transactions_nearby_sectors": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1185,
+    "filled_global_median": 0
+  },
+  "price_pre_owned_house_transactions_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1185,
+    "filled_global_median": 0
+  },
+  "surrounding_housing_average_price": {
+    "strategy": "sector_ffill_then_history_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_history": 1106,
+    "filled_global_median": 0
+  },
+  "period_new_house_sell_through": {
+    "strategy": "sector_ffill_then_sector_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_median": 0,
+    "filled_global_median": 79
+  },
+  "period_new_house_sell_through_synthetic": {
+    "strategy": "sector_ffill_then_sector_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_median": 0,
+    "filled_global_median": 79
+  },
+  "period_new_house_sell_through_nearby_sectors": {
+    "strategy": "sector_ffill_then_sector_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_median": 0,
+    "filled_global_median": 1264
+  },
+  "period_new_house_sell_through_nearby_sectors_synthetic": {
+    "strategy": "sector_ffill_then_sector_median_then_global",
+    "filled_sector_ffill": 0,
+    "filled_sector_median": 0,
+    "filled_global_median": 1264
+  },
+  "city_year_end_registered_population_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_total_households_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_year_end_resident_population_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_year_end_total_employed_population_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_year_end_urban_non_private_employees_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_private_individual_and_other_employees_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_private_individual_ratio": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_national_year_end_total_population_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_resident_registered_ratio": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_under_18_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_18_60_years_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_over_60_years_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_total": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_under_18_percent": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_18_60_years_percent": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_over_60_years_percent": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_gdp_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_primary_industry_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_secondary_industry_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_tertiary_industry_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_gdp_per_capita_yuan": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_national_gdp_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_national_economic_primacy": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_national_population_share": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_gdp_population_ratio": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_secondary_industry_development_gdp_share": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_tertiary_industry_development_gdp_share": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_employed_population": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_primary_industry_percent": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_secondary_industry_percent": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_tertiary_industry_percent": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_white_collar_service_vs_blue_collar_manufacturing_ratio": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_general_public_budget_revenue_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_personal_income_tax_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_per_capita_personal_income_tax_yuan": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_general_public_budget_expenditure_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_total_retail_sales_of_consumer_goods_100m": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_retail_sales_growth_rate": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_urban_consumer_price_index_previous_year_100": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_annual_average_wage_urban_non_private_employees_yuan": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_annual_average_wage_urban_non_private_on_duty_employees_yuan": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_per_capita_disposable_income_absolute_yuan": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_per_capita_disposable_income_index_previous_year_100": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_engel_coefficient": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_per_capita_housing_area_sqm": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_number_of_universities": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_university_students_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_number_of_middle_schools": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_middle_school_students_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_number_of_primary_schools": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_primary_school_students_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_number_of_kindergartens": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_kindergarten_students_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_hospitals_health_centers": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_hospital_beds_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_health_technical_personnel_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_doctors_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_road_length_km": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_road_area_10k_sqm": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_per_capita_urban_road_area_sqm": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_number_of_operating_bus_lines": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_operating_bus_line_length_km": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_internet_broadband_access_subscribers_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_internet_broadband_access_ratio": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_number_of_industrial_enterprises_above_designated_size": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_total_current_assets_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_total_fixed_assets_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_main_business_taxes_and_surcharges_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_total_fixed_asset_investment_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 7584
+  },
+  "city_real_estate_development_investment_completed_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_residential_development_investment_completed_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_science_expenditure_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_education_expenditure_10k": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  },
+  "city_winner_malls_dense_was_missing": {
+    "strategy": "sector_ffill_then_month_ffill_then_global_median",
+    "filled_sector_ffill": 0,
+    "filled_month_ffill": 0,
+    "filled_global_median": 0
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "features": [
+    "prediction",
+    "month_index",
+    "target_city_weighted_mean",
+    "target_share"
+  ]
+}

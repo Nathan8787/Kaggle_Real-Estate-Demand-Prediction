@@ -1,0 +1,20 @@
+seed: 29
+time_budget: 28800
+metric: competition_score
+estimator_list:
+  - xgboost
+n_jobs: -1
+fit_kwargs_by_estimator:
+  xgboost:
+    tree_method: hist
+    device: cuda
+search_space:
+  xgboost:
+    n_estimators:      { _type: randint,    _value: [400, 2500] }
+    max_depth:         { _type: randint,    _value: [3, 8] }
+    learning_rate:     { _type: loguniform, _value: [0.01, 0.3] }
+    subsample:         { _type: uniform,    _value: [0.6, 0.9] }
+    colsample_bytree:  { _type: uniform,    _value: [0.7, 1] }
+    min_child_weight:  { _type: loguniform, _value: [0.01, 15] }
+    reg_alpha:         { _type: loguniform, _value: [1e-4, 15] }
+    reg_lambda:        { _type: loguniform, _value: [1e-4, 15] }

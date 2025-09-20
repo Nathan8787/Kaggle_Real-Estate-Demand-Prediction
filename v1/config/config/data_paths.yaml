@@ -1,0 +1,6 @@
+﻿raw_dir: ../
+train_dir: ../train
+panel_path: ../data/processed/panel.parquet
+features_path: ../data/processed/features.parquet
+sample_submission: ../sample_submission.csv
+test_path: ../test.csv

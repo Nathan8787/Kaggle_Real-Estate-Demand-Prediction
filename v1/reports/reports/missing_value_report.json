@@ -1,0 +1,414 @@
+{
+  "num_new_house_transactions": {
+    "strategy": "fill_zero",
+    "filled": 2151
+  },
+  "area_new_house_transactions": {
+    "strategy": "fill_zero",
+    "filled": 2151
+  },
+  "area_per_unit_new_house_transactions": {
+    "strategy": "fill_zero",
+    "filled": 2151
+  },
+  "num_new_house_available_for_sale": {
+    "strategy": "fill_zero",
+    "filled": 2165
+  },
+  "area_new_house_available_for_sale": {
+    "strategy": "fill_zero",
+    "filled": 2165
+  },
+  "num_new_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "area_new_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "amount_new_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "area_per_unit_new_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "num_new_house_available_for_sale_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "area_new_house_available_for_sale_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "area_pre_owned_house_transactions": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "amount_pre_owned_house_transactions": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "num_pre_owned_house_transactions": {
+    "strategy": "fill_zero",
+    "filled": 2224
+  },
+  "num_pre_owned_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2157
+  },
+  "area_pre_owned_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2157
+  },
+  "amount_pre_owned_house_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2157
+  },
+  "num_land_transactions": {
+    "strategy": "fill_zero",
+    "filled": 1688
+  },
+  "num_land_transactions_nearby": {
+    "strategy": "fill_zero",
+    "filled": 2559
+  },
+  "target_filled": {
+    "strategy": "fill_zero",
+    "filled": 0
+  },
+  "price_new_house_transactions": {
+    "strategy": "sector_median_then_global",
+    "filled": 2444
+  },
+  "total_price_per_unit_new_house_transactions": {
+    "strategy": "sector_median_then_global",
+    "filled": 2444
+  },
+  "price_new_house_transactions_nearby": {
+    "strategy": "sector_median_then_global",
+    "filled": 3488
+  },
+  "total_price_per_unit_new_house_transactions_nearby": {
+    "strategy": "sector_median_then_global",
+    "filled": 3488
+  },
+  "price_pre_owned_house_transactions": {
+    "strategy": "sector_median_then_global",
+    "filled": 3506
+  },
+  "price_pre_owned_house_transactions_nearby": {
+    "strategy": "sector_median_then_global",
+    "filled": 3342
+  },
+  "surrounding_housing_average_price": {
+    "strategy": "sector_median_then_global",
+    "filled": 2212
+  },
+  "period_new_house_sell_through": {
+    "strategy": "forward_fill_sector_then_median",
+    "filled": 2165
+  },
+  "period_new_house_sell_through_nearby": {
+    "strategy": "forward_fill_sector_then_median",
+    "filled": 2224
+  },
+  "city_winner_malls_dense": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_year_end_registered_population_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_total_households_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_year_end_resident_population_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_year_end_total_employed_population_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_year_end_urban_non_private_employees_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_private_individual_and_other_employees_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_private_individual_ratio": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_national_year_end_total_population_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_resident_registered_ratio": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_under_18_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_18_60_years_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_over_60_years_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_total": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_under_18_percent": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_18_60_years_percent": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_over_60_years_percent": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_gdp_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_primary_industry_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_secondary_industry_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_tertiary_industry_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_gdp_per_capita_yuan": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_national_gdp_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_national_economic_primacy": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_national_population_share": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_gdp_population_ratio": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_secondary_industry_development_gdp_share": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_tertiary_industry_development_gdp_share": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_employed_population": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_primary_industry_percent": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_secondary_industry_percent": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_tertiary_industry_percent": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_white_collar_service_vs_blue_collar_manufacturing_ratio": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_general_public_budget_revenue_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_personal_income_tax_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_per_capita_personal_income_tax_yuan": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_general_public_budget_expenditure_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_total_retail_sales_of_consumer_goods_100m": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_retail_sales_growth_rate": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_urban_consumer_price_index_previous_year_100": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_annual_average_wage_urban_non_private_employees_yuan": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_annual_average_wage_urban_non_private_on_duty_employees_yuan": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_per_capita_disposable_income_absolute_yuan": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_per_capita_disposable_income_index_previous_year_100": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_engel_coefficient": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_per_capita_housing_area_sqm": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_number_of_universities": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_university_students_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_number_of_middle_schools": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_middle_school_students_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_number_of_primary_schools": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_primary_school_students_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_number_of_kindergartens": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_kindergarten_students_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_hospitals_health_centers": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_hospital_beds_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_health_technical_personnel_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_doctors_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_road_length_km": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_road_area_10k_sqm": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_per_capita_urban_road_area_sqm": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_number_of_operating_bus_lines": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_operating_bus_line_length_km": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_internet_broadband_access_subscribers_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_internet_broadband_access_ratio": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_number_of_industrial_enterprises_above_designated_size": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_total_current_assets_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_total_fixed_assets_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_main_business_taxes_and_surcharges_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_total_fixed_asset_investment_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_real_estate_development_investment_completed_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_residential_development_investment_completed_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_science_expenditure_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  },
+  "city_education_expenditure_10k": {
+    "strategy": "forward_fill",
+    "filled": 0
+  }
+}
