@@ -30,6 +30,16 @@ from src.panel_builder_v3 import (
     merge_sources_v3,
     save_panel_v3,
 )
+from src.automl_runner_v3 import run_training_pipeline
+from src.features_v3 import build_feature_matrix_v3
+from src.metrics_v3 import competition_score
+from src.panel_builder_v3 import (
+    attach_target_v3,
+    build_calendar_v3,
+    load_raw_tables_v3,
+    merge_sources_v3,
+    save_panel_v3,
+)
 from src.predict_v3 import generate_submission
 from src.splits_v3 import HOLDOUT_WINDOW
 

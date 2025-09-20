@@ -110,6 +110,22 @@ def apply_projection(panel_df: pd.DataFrame, forecast_start: pd.Timestamp) -> pd
         sector_groups = projected.groupby("sector_id", sort=False).groups
         for sector_id, indices in sector_groups.items():
             history_values: list[float] = []
+        observed_months = projected.loc[observed_mask, "month"].dt.month
+        month_medians = (
+            projected.loc[observed_mask, column]
+            .groupby(observed_months)
+            .median()
+            .to_dict()
+        )
+        global_median = (
+            float(projected.loc[observed_mask, column].median())
+            if observed_mask.any()
+            else np.nan
+        )
+
+        sector_groups = projected.groupby("sector_id", sort=False).groups
+        for sector_id, indices in sector_groups.items():
+            history_records: list[tuple[pd.Timestamp, float]] = []
             ordered_indices = sorted(indices, key=lambda idx: projected.at[idx, "month"])
 
             for idx in ordered_indices:
@@ -135,6 +151,27 @@ def apply_projection(panel_df: pd.DataFrame, forecast_start: pd.Timestamp) -> pd
                 projected.at[idx, column] = projected_value
                 projected.at[idx, f"{column}_proj_source"] = source_code
                 history_values.append(projected_value)
+                history_records.append((month_value, float(cell_value)))
+                continue
+
+                recent_history = [value for m, value in history_records if m < month_value]
+                month_specific_history = [
+                    value
+                    for m, value in history_records
+                    if (m < month_value and m.month == month_value.month)
+                ]
+
+                projected_value, source_code = _project_value(
+                    recent_history,
+                    month_value,
+                    month_medians,
+                    global_median,
+                    month_specific_history,
+                )
+                projected_value = float(np.clip(projected_value, 0.0, None))
+                projected.at[idx, column] = projected_value
+                projected.at[idx, f"{column}_proj_source"] = source_code
+                history_records.append((month_value, projected_value))
 
     return projected
 
@@ -144,6 +181,7 @@ def _project_value(
     month_value: pd.Timestamp,
     month_medians: dict[int, float],
     global_median: float,
+    month_specific_history: list[float],
 ) -> tuple[float, int]:
     history = [float(v) for v in history_values if pd.notna(v)]
     n_obs = len(history)
@@ -167,6 +205,33 @@ def _project_value(
     month_median = month_medians.get(month_key)
     if month_median is not None and not np.isnan(month_median):
         return float(month_median), 3
+    if n_obs >= 4:
+        median_val = float(np.median(history)) if history else 0.0
+        last_val = float(history[-1]) if history else 0.0
+        value = max(median_val, last_val)
+
+        month_key = int(month_value.month)
+        cross_median = month_medians.get(month_key)
+        if month_specific_history:
+            sector_median = float(np.median(month_specific_history))
+            if cross_median is not None and not np.isnan(cross_median):
+                sector_median = min(sector_median, float(cross_median))
+            value = max(value, sector_median)
+        elif cross_median is not None and not np.isnan(cross_median):
+            value = max(value, float(cross_median))
+
+        return value, 2
+
+    month_key = int(month_value.month)
+    fallback_candidates: list[float] = []
+    if month_specific_history:
+        fallback_candidates.append(float(np.median(month_specific_history)))
+    cross_median = month_medians.get(month_key)
+    if cross_median is not None and not np.isnan(cross_median):
+        fallback_candidates.append(float(cross_median))
+
+    if fallback_candidates:
+        return float(min(fallback_candidates)), 3
 
     if global_median is not None and not np.isnan(global_median):
         return float(global_median), 3

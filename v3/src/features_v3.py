@@ -199,6 +199,15 @@ def build_feature_matrix_v3(
 
     _add_time_features(features_df)
     categories["time"].extend(TIME_FEATURES)
+    features_df["population_weight"] = np.where(
+        features_df["resident_population"] > 0,
+        features_df["resident_population"],
+        np.where(
+            features_df["population_scale"] > 0,
+            features_df["population_scale"],
+            1.0,
+        ),
+    )
     categories["raw"].extend([
         col for col in RAW_MONTHLY_COLUMNS if col in features_df.columns
     ])
@@ -214,6 +223,7 @@ def build_feature_matrix_v3(
     categories["raw"].extend(
         [col for col in POI_CORE_COLUMNS if col in features_df.columns]
     )
+    categories["raw"].append("population_weight")
     categories["raw"].append("sector_id")
 
     features_df = _add_missing_flags(features_df, forecast_start_ts, missing_report)
@@ -249,6 +259,13 @@ def build_feature_matrix_v3(
     share_features, weighted_features = _create_share_features(features_df)
     categories["share"].extend(share_features)
     categories["weighted_mean"].extend(weighted_features)
+
+    log_sources = [col for col in RAW_MONTHLY_COLUMNS if col in features_df.columns]
+    log_sources.extend(growth_features)
+    log_sources.extend(weighted_features)
+    log_sources.extend(share_features)
+    log_features = _create_log1p_features(features_df, log_sources)
+    categories["log1p"].extend(log_features)
 
     search_report_path = None
     if reports_dir is not None:
@@ -357,6 +374,7 @@ def build_feature_matrix_v3(
     feature_columns = inventory["feature_columns"]
 
     if not FEATURE_COUNT_MIN <= len(feature_columns) <= FEATURE_COUNT_MAX:
+    if not 537 <= len(feature_columns) <= 567:
         counts = {k: len(v) for k, v in inventory["by_category"].items()}
         categorized = set().union(*inventory["by_category"].values())
         uncategorized = sorted(set(feature_columns) - categorized)
@@ -713,6 +731,19 @@ def _create_share_features(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
         df[weighted_col] = city_weighted.fillna(0.0)
 
         df[share_col] = metric_values / (df[weighted_col] + 1e-6)
+    weight = df["population_weight"].replace(0.0, 1.0)
+    for metric in SHARE_METRICS:
+        if metric not in df.columns:
+            continue
+        weighted_col = f"{metric}_city_weighted_mean"
+        share_col = f"{metric}_share"
+        numerator = (df[metric] * weight)
+        denom = df.groupby("month")["population_weight"].transform("sum")
+        with np.errstate(invalid="ignore"):
+            city_weighted = numerator.groupby(df["month"]).transform("sum") / np.where(denom == 0, 1.0, denom)
+        city_weighted = city_weighted.fillna(df[metric].mean())
+        df[weighted_col] = city_weighted.fillna(0.0)
+        df[share_col] = df[metric] / (df[weighted_col] + 1e-6)
         df[share_col] = df[share_col].replace([np.inf, -np.inf], 0.0).fillna(0.0)
         share_cols.append(share_col)
         weighted_cols.append(weighted_col)
@@ -730,6 +761,10 @@ def _create_log1p_features(
     for column in columns:
         if max_new_features is not None and len(created) >= max_new_features:
             break
+def _create_log1p_features(df: pd.DataFrame, columns: Iterable[str]) -> List[str]:
+    created = []
+    seen = set()
+    for column in columns:
         if column not in df.columns or column in seen:
             continue
         log_col = f"{column}_log1p"

@@ -105,6 +105,7 @@ def _ensure_directories(models_dir: Path, reports_dir: Path, logs_dir: Path) -> 
 
 def _select_feature_columns(features_df: pd.DataFrame) -> List[str]:
     exclude = {"month", "id", "target"}
+    exclude = {"month", "id"}
     if "target" not in features_df.columns:
         raise KeyError("features_df must contain a 'target' column")
     feature_cols = [col for col in features_df.columns if col not in exclude]
@@ -414,6 +415,92 @@ def run_cross_validation(
         y_pred = np.clip(np.expm1(y_pred_log), 0.0, None)
         metrics = _compute_metrics(y_valid_raw, y_pred)
 
+        train_slice = ordered_df.loc[train_idx].copy()
+        valid_slice = ordered_df.loc[valid_idx].copy()
+
+        train_slice = train_slice[train_slice["target"].notna()]
+        valid_slice = valid_slice[valid_slice["target"].notna()]
+        if train_slice.empty or valid_slice.empty:
+            logger.warning("Fold %s skipped due to insufficient labeled data", fold_id)
+            continue
+
+        X_train = train_slice[feature_cols].copy()
+        X_valid = valid_slice[feature_cols].copy()
+        y_train_raw = train_slice["target"].astype(float).to_numpy()
+        y_valid_raw = valid_slice["target"].astype(float).to_numpy()
+        y_train_log = np.log1p(y_train_raw)
+        y_valid_log = np.log1p(y_valid_raw)
+
+        float_cols = _split_float_columns(X_train)
+        scaler = StandardScaler(with_mean=True, with_std=True)
+        if float_cols:
+            scaler.fit(X_train[float_cols])
+            X_train.loc[:, float_cols] = scaler.transform(X_train[float_cols])
+            X_valid.loc[:, float_cols] = scaler.transform(X_valid[float_cols])
+        scaler_path = models_dir / f"fold_{fold_id}_scaler.pkl"
+        scaler_report_path = reports_dir / f"fold_{fold_id}_scaler_stats.json"
+        _save_scaler_artifacts(scaler, float_cols, scaler_path, scaler_report_path)
+
+        automl = AutoML()
+        automl.fit(
+            X_train=X_train.values,
+            y_train=y_train_log,
+            task=config["task"],
+            metric=competition_metric,
+            estimator_list=config["estimator_list"],
+            time_budget=float(config["time_budget_per_fold"]),
+            n_jobs=int(config["n_jobs"]),
+            eval_method="holdout",
+            X_val=X_valid.values,
+            y_val=y_valid_log,
+            verbose=0,
+            fit_kwargs_by_estimator={"xgboost": config.get("fit_kwargs", {})},
+            seed=int(config["seed"]),
+        )
+        best_iteration = getattr(automl, "best_iteration", None)
+        if best_iteration is not None and best_iteration < int(config["min_trials_per_fold"]):
+            logger.info(
+                "Fold %s completed %s trials; extending search to meet minimum %s",
+                fold_id,
+                best_iteration,
+                config["min_trials_per_fold"],
+            )
+            automl.fit(
+                X_train=X_train.values,
+                y_train=y_train_log,
+                task=config["task"],
+                metric=competition_metric,
+                estimator_list=config["estimator_list"],
+                time_budget=float(config["time_budget_per_fold"]),
+                n_jobs=int(config["n_jobs"]),
+                eval_method="holdout",
+                X_val=X_valid.values,
+                y_val=y_valid_log,
+                verbose=0,
+                fit_kwargs_by_estimator={"xgboost": config.get("fit_kwargs", {})},
+                seed=int(config["seed"]),
+            )
+            best_iteration = getattr(automl, "best_iteration", None)
+
+        best_config = automl.best_config.copy()
+        params = _merge_config_with_fit_kwargs(best_config, config.get("fit_kwargs", {}), int(config["seed"]))
+        params.setdefault("n_estimators", best_config.get("n_estimators", 500))
+        model = XGBRegressor(**params)
+        model.fit(
+            X_train.values,
+            y_train_log,
+            eval_set=[(X_valid.values, y_valid_log)],
+            early_stopping_rounds=100,
+            verbose=False,
+        )
+
+        model_path = models_dir / f"fold_{fold_id}_model.json"
+        model.get_booster().save_model(model_path)
+
+        y_pred_log = model.predict(X_valid.values)
+        y_pred = np.clip(np.expm1(y_pred_log), 0.0, None)
+        metrics = _compute_metrics(y_valid_raw, y_pred)
+
         prediction_frame = pd.DataFrame(
             {
                 "id": valid_slice.get("id"),
@@ -422,6 +509,8 @@ def run_cross_validation(
                 "target": y_valid_raw,
                 "prediction": y_pred,
                 "target_available_flag": valid_slice.get("target_available_flag"),
+                "target": y_valid_raw,
+                "prediction": y_pred,
             }
         )
         prediction_path = reports_dir / f"predictions_fold_{fold_id}.parquet"
@@ -448,6 +537,10 @@ def run_cross_validation(
 
         if progress:
             progress.step(f"Fold {fold_id} score={metrics['competition_score']:.3f}")
+
+    if fold_metrics:
+        metrics_df = pd.DataFrame(fold_metrics)
+        metrics_df.to_csv(reports_dir / "fold_metrics_v3.csv", index=False)
 
     if fold_metrics:
         metrics_df = pd.DataFrame(fold_metrics)

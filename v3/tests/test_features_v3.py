@@ -119,6 +119,8 @@ def test_feature_counts_and_categories(tmp_path: Path):
     assert "search_kw_kw0_pct_change_1" in features_df.columns
     assert "poi_pca_1" in features_df.columns
     assert "bus_station_cnt" not in features_df.columns
+    assert "search_kw_kw0_pct_change_1" in features_df.columns
+    assert "poi_pca_1" in features_df.columns
     assert "selected_search_keywords" in metadata
     assert len(metadata["selected_search_keywords"]) <= 12
 
