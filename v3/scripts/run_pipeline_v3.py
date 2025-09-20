@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import shutil
 import sys
 from pathlib import Path
@@ -13,6 +14,11 @@ from sklearn.metrics import r2_score
 from xgboost import XGBRegressor
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 from src.automl_runner_v3 import run_training_pipeline
 from src.features_v3 import build_feature_matrix_v3
