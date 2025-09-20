@@ -1,513 +1,885 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
+import logging
+from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
+from sklearn.decomposition import PCA
 
-__all__ = ["build_feature_matrix_v2"]
+from .panel_builder_v3 import POI_CORE_COLUMNS, TARGET_CUTOFF
+from .projection_v3 import apply_projection, collect_projection_drift
 
-LAG_STEPS = (1, 3, 6, 12)
-ROLLING_WINDOWS = (3, 6, 12)
+logger = logging.getLogger(__name__)
+
+__all__ = ["build_feature_matrix_v3"]
+
+POI_SUPPLEMENTAL_COLUMNS = [
+    "bus_station_cnt",
+    "catering",
+    "commercial_area",
+    "education",
+    "education_training_school_education_kindergarten",
+    "education_training_school_education_middle_school",
+    "education_training_school_education_primary_school",
+    "education_training_school_education_research_institution",
+    "hotel",
+    "leisure_and_entertainment",
+    "leisure_entertainment_cultural_venue_cultural_palace",
+    "leisure_entertainment_entertainment_venue_game_arcade",
+    "leisure_entertainment_entertainment_venue_party_house",
+    "medical_health",
+    "medical_health_blood_donation_station",
+    "medical_health_clinic",
+    "medical_health_disease_prevention_institution",
+    "medical_health_first_aid_center",
+    "medical_health_general_hospital",
+    "medical_health_pharmaceutical_healthcare",
+    "medical_health_physical_examination_institution",
+    "medical_health_rehabilitation_institution",
+    "medical_health_specialty_hospital",
+    "medical_health_tcm_hospital",
+    "medical_health_veterinary_station",
+    "office_building",
+    "office_building_industrial_building_industrial_building",
+    "rentable_shops",
+    "residential_area",
+    "retail",
+    "subway_station_cnt",
+    "transportation_facilities_service_airport_related",
+    "transportation_facilities_service_bus_station",
+    "transportation_facilities_service_light_rail_station",
+    "transportation_facilities_service_long_distance_bus_station",
+    "transportation_facilities_service_port_terminal",
+    "transportation_facilities_service_subway_station",
+    "transportation_facilities_service_train_station",
+    "transportation_station",
+]
+
+RAW_MONTHLY_COLUMNS = [
+    "amount_new_house_transactions",
+    "num_new_house_transactions",
+    "area_new_house_transactions",
+    "price_new_house_transactions",
+    "area_per_unit_new_house_transactions",
+    "total_price_per_unit_new_house_transactions",
+    "num_new_house_available_for_sale",
+    "area_new_house_available_for_sale",
+    "period_new_house_sell_through",
+    "amount_new_house_transactions_nearby_sectors",
+    "num_new_house_transactions_nearby_sectors",
+    "area_new_house_transactions_nearby_sectors",
+    "price_new_house_transactions_nearby_sectors",
+    "area_per_unit_new_house_transactions_nearby_sectors",
+    "total_price_per_unit_new_house_transactions_nearby_sectors",
+    "num_new_house_available_for_sale_nearby_sectors",
+    "area_new_house_available_for_sale_nearby_sectors",
+    "period_new_house_sell_through_nearby_sectors",
+    "amount_pre_owned_house_transactions",
+    "num_pre_owned_house_transactions",
+    "area_pre_owned_house_transactions",
+    "price_pre_owned_house_transactions",
+    "amount_pre_owned_house_transactions_nearby_sectors",
+    "num_pre_owned_house_transactions_nearby_sectors",
+    "area_pre_owned_house_transactions_nearby_sectors",
+    "price_pre_owned_house_transactions_nearby_sectors",
+    "transaction_amount",
+    "num_land_transactions",
+    "construction_area",
+    "planned_building_area",
+    "transaction_amount_nearby_sectors",
+    "num_land_transactions_nearby_sectors",
+    "construction_area_nearby_sectors",
+    "planned_building_area_nearby_sectors",
+]
+
+TARGET_FEATURES = [
+    "target",
+    "target_filled",
+    "target_available_flag",
+    "target_filled_was_missing",
+    "is_future",
+]
+
+CITY_FEATURES = [
+    "city_gdp_100m",
+    "city_secondary_industry_100m",
+    "city_tertiary_industry_100m",
+    "city_gdp_per_capita_yuan",
+    "city_total_households_10k",
+    "city_year_end_resident_population_10k",
+    "city_total_retail_sales_of_consumer_goods_100m",
+    "city_per_capita_disposable_income_absolute_yuan",
+    "city_annual_average_wage_urban_non_private_employees_yuan",
+    "city_number_of_universities",
+    "city_hospital_beds_10k",
+    "city_number_of_operating_bus_lines",
+]
+
+CITY_FLAG_COLUMNS = [f"{col}_was_interpolated" for col in CITY_FEATURES]
+
+METRIC_SET_FULL = RAW_MONTHLY_COLUMNS
+METRIC_SET_LONG = [
+    "amount_new_house_transactions",
+    "num_new_house_transactions",
+    "price_new_house_transactions",
+    "amount_new_house_transactions_nearby_sectors",
+    "num_new_house_transactions_nearby_sectors",
+    "price_new_house_transactions_nearby_sectors",
+    "amount_pre_owned_house_transactions",
+    "num_pre_owned_house_transactions",
+    "amount_pre_owned_house_transactions_nearby_sectors",
+    "num_pre_owned_house_transactions_nearby_sectors",
+    "transaction_amount",
+    "transaction_amount_nearby_sectors",
+]
+
+GROWTH_METRICS = [
+    "amount_new_house_transactions",
+    "num_new_house_transactions",
+    "price_new_house_transactions",
+    "amount_pre_owned_house_transactions",
+    "num_pre_owned_house_transactions",
+    "transaction_amount",
+]
+
+SHARE_METRICS = [
+    "amount_new_house_transactions",
+    "num_new_house_transactions",
+    "price_new_house_transactions",
+    "amount_new_house_transactions_nearby_sectors",
+    "num_new_house_transactions_nearby_sectors",
+    "amount_pre_owned_house_transactions",
+    "num_pre_owned_house_transactions",
+    "transaction_amount",
+    "transaction_amount_nearby_sectors",
+    "num_land_transactions",
+]
+
+TIME_FEATURES = [
+    "year",
+    "month_num",
+    "quarter",
+    "month_index",
+    "days_in_month",
+    "is_year_start",
+    "is_year_end",
+]
+
+SEARCH_VARIANCE_LIMIT = 12
+
+FEATURE_COUNT_MIN = 537
+FEATURE_COUNT_MAX = 567
 
 
-def _ensure_datetime(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df["month"] = pd.to_datetime(df["month"], errors="coerce")
-    return df
+def build_feature_matrix_v3(
+    panel_path: Path | str,
+    forecast_start: str | pd.Timestamp,
+    features_path: Path | str | None,
+    reports_dir: Path | str | None,
+) -> tuple[pd.DataFrame, dict]:
+    """Construct the v3 feature matrix following the published specification."""
 
+    panel_path = Path(panel_path)
+    reports_path = Path(reports_dir) if reports_dir is not None else None
 
-def _add_missing_flags(df: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
-    for col in columns:
-        flag = f"{col}_was_missing"
-        if flag not in df.columns:
-            df[flag] = df[col].isna().astype(np.int8)
-    return df
+    features_df = pd.read_parquet(panel_path)
+    features_df["month"] = pd.to_datetime(features_df["month"], errors="coerce")
+    features_df = features_df.sort_values(["month", "sector_id"]).reset_index(drop=True)
 
+    original_df = features_df.copy()
+    forecast_start_ts = pd.Timestamp(forecast_start).to_period("M").to_timestamp()
+    features_df = apply_projection(features_df, forecast_start_ts)
 
-def _apply_missing_value_policy(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, Dict[str, int]]]:
-    report: Dict[str, Dict[str, int]] = {}
-    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
+    if reports_path is not None:
+        collect_projection_drift(original_df, features_df, forecast_start_ts, reports_path)
 
-    count_columns = [
+    # Ensure targets after cutoff remain NaN
+    features_df.loc[features_df["month"] > TARGET_CUTOFF, "target"] = np.nan
+
+    categories: Dict[str, List[str]] = defaultdict(list)
+    missing_report: List[dict] = []
+
+    _add_time_features(features_df)
+    categories["time"].extend(TIME_FEATURES)
+    categories["raw"].extend([
+        col for col in RAW_MONTHLY_COLUMNS if col in features_df.columns
+    ])
+    categories["raw"].extend(
+        [col for col in TARGET_FEATURES if col in features_df.columns and col not in {"target", "target_filled_was_missing"}]
+    )
+    if "target_filled_was_missing" in features_df.columns:
+        categories["missing_flags"].append("target_filled_was_missing")
+    categories["raw"].extend([col for col in CITY_FEATURES if col in features_df.columns])
+    categories["missing_flags"].extend(
+        [col for col in CITY_FLAG_COLUMNS if col in features_df.columns]
+    )
+    categories["raw"].extend(
+        [col for col in POI_CORE_COLUMNS if col in features_df.columns]
+    )
+    categories["raw"].append("sector_id")
+
+    features_df = _add_missing_flags(features_df, forecast_start_ts, missing_report)
+    categories["missing_flags"].extend(
+        [
+            f"{column}_was_missing"
+            for column in RAW_MONTHLY_COLUMNS
+            if f"{column}_was_missing" in features_df.columns
+        ]
+    )
+
+    lag_features = _create_lag_features(features_df)
+    for col in lag_features:
+        categories["lag"].append(col)
+    long_lag_features = _create_long_lag_features(features_df)
+    for col in long_lag_features:
+        categories["lag_long"].append(col)
+
+    rolling_mean_features = _create_rolling_means(features_df)
+    for col in rolling_mean_features:
+        if col.endswith("_12"):
+            categories["rolling_mean_long"].append(col)
+        else:
+            categories["rolling_mean"].append(col)
+
+    rolling_std_features = _create_rolling_stds(features_df)
+    categories["rolling_std"].extend(rolling_std_features)
+
+    growth_features, growth_flags = _create_growth_features(features_df)
+    categories["growth"].extend(growth_features)
+    categories["missing_flags"].extend(growth_flags)
+
+    share_features, weighted_features = _create_share_features(features_df)
+    categories["share"].extend(share_features)
+    categories["weighted_mean"].extend(weighted_features)
+
+    search_report_path = None
+    if reports_path is not None:
+        search_report_path = reports_path / "search_keywords_v3.json"
+    selected_search = _select_search_keywords(
+        features_df, forecast_start_ts, SEARCH_VARIANCE_LIMIT, search_report_path
+    )
+    categories["search"].extend([col for col in selected_search if col in features_df.columns])
+    search_features = _create_search_features(features_df, selected_search)
+    categories["search"].extend(search_features)
+    categories["missing_flags"].extend([f"{col}_was_missing" for col in selected_search])
+
+    poi_features = _create_poi_pca(features_df, reports_path)
+    categories["poi_pca"].extend(poi_features)
+
+    supplemental_cols = [
+        col for col in POI_SUPPLEMENTAL_COLUMNS if col in features_df.columns
+    ]
+    if supplemental_cols:
+        features_df.drop(columns=supplemental_cols, inplace=True)
+
+    # Remove unselected search columns
+    _drop_unselected_search_columns(features_df, selected_search)
+
+    projection_meta_cols = [
         col
-        for col in df.columns
-        if col.startswith(("num_", "area_", "amount_", "construction_", "transaction_", "planned_building_"))
-        or col.startswith("number_of_")
-        or col.endswith("_dense")
+        for col in features_df.columns
+        if col.endswith("_proj_source") or col.endswith("_proj_overridden")
     ]
-    if "target_filled" in df.columns:
-        count_columns = [col for col in count_columns if col != "target_filled"]
-
-    df = _add_missing_flags(df, count_columns)
-    df, count_report = _fill_count_like_columns(df, count_columns)
-    report.update(count_report)
-
-    if "target_filled" in df.columns:
-        flag_col = "target_filled_was_missing"
-        if flag_col not in df.columns:
-            df[flag_col] = df["target_filled"].isna().astype(np.int8)
-        missing_count = int(df["target_filled"].isna().sum())
-        df["target_filled"] = df["target_filled"].fillna(0.0)
-        report["target_filled"] = {
-            "strategy": "fill_zero",
-            "filled": missing_count,
-        }
-
-    price_columns = [
-        col for col in df.columns if "price" in col and not col.startswith("city_")
+    if projection_meta_cols:
+        features_df.drop(columns=projection_meta_cols, inplace=True)
+    redundant_missing = [
+        col for col in features_df.columns if col.endswith("_was_missing_was_missing")
     ]
-    df = _add_missing_flags(df, price_columns)
-    df, price_report = _fill_price_columns(df, price_columns)
-    report.update(price_report)
+    if redundant_missing:
+        features_df.drop(columns=redundant_missing, inplace=True)
 
-    period_columns = [col for col in df.columns if col.startswith("period_")]
-    df = _add_missing_flags(df, period_columns)
-    df, period_report = _fill_period_columns(df, period_columns)
-    report.update(period_report)
+    log_sources: List[str] = []
+    seen_sources: set[str] = set()
+    for group in (
+        [col for col in METRIC_SET_FULL if col in features_df.columns],
+        [col for col in growth_features if col in features_df.columns],
+        [col for col in share_features if col in features_df.columns],
+        [col for col in weighted_features if col in features_df.columns],
+    ):
+        for column in group:
+            if column in seen_sources:
+                continue
+            log_sources.append(column)
+            seen_sources.add(column)
 
-    city_columns = [col for col in df.columns if col.startswith("city_") and not col.endswith("_was_interpolated")]
-    df = _add_missing_flags(df, city_columns)
-    df, city_report = _fill_city_columns(df, city_columns)
-    report.update(city_report)
-
-    return df, report
-
-
-def _fill_count_like_columns(df: pd.DataFrame, columns: List[str]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, int]]]:
-    if not columns:
-        return df, {}
-    report: Dict[str, Dict[str, int]] = {}
-    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
-
-    for col in columns:
-        filled = {
-            "strategy": "sector_ffill_then_rolling_then_city_then_global_then_zero",
-            "filled_sector_ffill": 0,
-            "filled_sector_rolling": 0,
-            "filled_city_median": 0,
-            "filled_global_median": 0,
-            "filled_zero": 0,
-        }
-        na_mask = df[col].isna()
-        if not na_mask.any():
-            report[col] = filled
-            continue
-
-        before_ffill = df[col].isna().sum()
-        df[col] = df.groupby("sector_id")[col].ffill()
-        after_ffill = df[col].isna().sum()
-        filled["filled_sector_ffill"] = int(before_ffill - after_ffill)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            rolling6 = (
-                df.groupby("sector_id")[col]
-                .transform(lambda s: s.shift(1).rolling(window=6, min_periods=4).median())
-            )
-            rolling3 = (
-                df.groupby("sector_id")[col]
-                .transform(lambda s: s.shift(1).rolling(window=3, min_periods=2).median())
-            )
-            before_roll = df[col].isna().sum()
-            df.loc[na_mask, col] = rolling6.loc[na_mask]
-            na_mask = df[col].isna()
-            df.loc[na_mask, col] = rolling3.loc[na_mask]
-            after_roll = df[col].isna().sum()
-            filled["filled_sector_rolling"] = int(before_roll - after_roll)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            city_median = df.groupby("month")[col].transform("median")
-            before_city = na_mask.sum()
-            df.loc[na_mask, col] = city_median.loc[na_mask]
-            after_city = df[col].isna().sum()
-            filled["filled_city_median"] = int(before_city - after_city)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            global_median = float(df[col].median(skipna=True)) if not df[col].dropna().empty else 0.0
-            before_global = na_mask.sum()
-            df.loc[na_mask, col] = global_median
-            after_global = df[col].isna().sum()
-            filled["filled_global_median"] = int(before_global - after_global)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            df.loc[na_mask, col] = 0.0
-            filled["filled_zero"] = int(na_mask.sum())
-
-        report[col] = filled
-    return df, report
-
-
-def _fill_price_columns(df: pd.DataFrame, columns: List[str]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, int]]]:
-    if not columns:
-        return df, {}
-    report: Dict[str, Dict[str, int]] = {}
-    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
-
-    for col in columns:
-        filled = {
-            "strategy": "sector_ffill_then_history_median_then_global",
-            "filled_sector_ffill": 0,
-            "filled_sector_history": 0,
-            "filled_global_median": 0,
-        }
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-        before_ffill = df[col].isna().sum()
-        df[col] = df.groupby("sector_id")[col].ffill()
-        after_ffill = df[col].isna().sum()
-        filled["filled_sector_ffill"] = int(before_ffill - after_ffill)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            history = df.groupby("sector_id")[col].transform(
-                lambda s: _sector_history_fill(s)
-            )
-            before_hist = na_mask.sum()
-            df.loc[na_mask, col] = history.loc[na_mask]
-            after_hist = df[col].isna().sum()
-            filled["filled_sector_history"] = int(before_hist - after_hist)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            global_median = float(df[col].median(skipna=True)) if not df[col].dropna().empty else 0.0
-            before_global = na_mask.sum()
-            df.loc[na_mask, col] = global_median
-            after_global = df[col].isna().sum()
-            filled["filled_global_median"] = int(before_global - after_global)
-
-        df[col] = df[col].fillna(0.0)
-        report[col] = filled
-
-    return df, report
-
-
-def _sector_history_fill(series: pd.Series) -> pd.Series:
-    history_values: List[float] = []
-    filled_values: List[float] = []
-    for value in series:
-        filled_values.append(float(np.nanmedian(history_values)) if history_values else np.nan)
-        if not pd.isna(value):
-            history_values.append(value)
-    result = pd.Series(filled_values, index=series.index)
-    remaining_mask = series.isna() & result.isna()
-    if remaining_mask.any():
-        global_median = float(series.median(skipna=True)) if not pd.isna(series.median(skipna=True)) else 0.0
-        result.loc[remaining_mask] = global_median
-    return result
-
-
-def _fill_period_columns(df: pd.DataFrame, columns: List[str]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, int]]]:
-    if not columns:
-        return df, {}
-    report: Dict[str, Dict[str, int]] = {}
-    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
-
-    for col in columns:
-        filled = {
-            "strategy": "sector_ffill_then_sector_median_then_global",
-            "filled_sector_ffill": 0,
-            "filled_sector_median": 0,
-            "filled_global_median": 0,
-        }
-        before_ffill = df[col].isna().sum()
-        df[col] = df.groupby("sector_id")[col].ffill()
-        after_ffill = df[col].isna().sum()
-        filled["filled_sector_ffill"] = int(before_ffill - after_ffill)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            sector_median = df.groupby("sector_id")[col].transform(lambda s: s.median(skipna=True))
-            before_median = na_mask.sum()
-            df.loc[na_mask, col] = sector_median.loc[na_mask]
-            after_median = df[col].isna().sum()
-            filled["filled_sector_median"] = int(before_median - after_median)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            global_median = float(df[col].median(skipna=True)) if not df[col].dropna().empty else 0.0
-            before_global = na_mask.sum()
-            df.loc[na_mask, col] = global_median
-            after_global = df[col].isna().sum()
-            filled["filled_global_median"] = int(before_global - after_global)
-
-        df[col] = df[col].fillna(0.0)
-        report[col] = filled
-    return df, report
-
-
-def _fill_city_columns(df: pd.DataFrame, columns: List[str]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, int]]]:
-    if not columns:
-        return df, {}
-    report: Dict[str, Dict[str, int]] = {}
-    df = df.sort_values(["month", "sector_id"]).reset_index(drop=True)
-
-    for col in columns:
-        filled = {
-            "strategy": "sector_ffill_then_month_ffill_then_global_median",
-            "filled_sector_ffill": 0,
-            "filled_month_ffill": 0,
-            "filled_global_median": 0,
-        }
-        before_sector = df[col].isna().sum()
-        df[col] = df.groupby("sector_id")[col].ffill()
-        after_sector = df[col].isna().sum()
-        filled["filled_sector_ffill"] = int(before_sector - after_sector)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            before_month = na_mask.sum()
-            df[col] = df[col].ffill()
-            after_month = df[col].isna().sum()
-            filled["filled_month_ffill"] = int(before_month - after_month)
-
-        na_mask = df[col].isna()
-        if na_mask.any():
-            global_median = float(df[col].median(skipna=True)) if not df[col].dropna().empty else 0.0
-            before_global = na_mask.sum()
-            df.loc[na_mask, col] = global_median
-            after_global = df[col].isna().sum()
-            filled["filled_global_median"] = int(before_global - after_global)
-
-        df[col] = df[col].fillna(0.0)
-        report[col] = filled
-    return df, report
-
-
-def _compute_time_features(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df["year"] = df["month"].dt.year
-    df["month_num"] = df["month"].dt.month
-    df["quarter"] = df["month"].dt.quarter
-    df["month_index"] = (df["year"] - 2019) * 12 + (df["month_num"] - 1)
-    df["is_year_start"] = (df["month_num"] == 1).astype(int)
-    df["is_year_end"] = (df["month_num"] == 12).astype(int)
-    df["days_in_month"] = df["month"].dt.days_in_month
-    return df
-
-
-def _compute_lag_and_rolling(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, List[str]]]:
-    metadata: Dict[str, List[str]] = {
-        "lag_features": [],
-        "rolling_mean_features": [],
-        "rolling_std_features": [],
-        "rolling_min_features": [],
-        "rolling_max_features": [],
-        "rolling_count_features": [],
-        "growth_features": [],
-    }
-    value_cols = [
-        col
-        for col in df.columns
-        if col.startswith(("num_", "area_", "amount_", "price_", "total_price_")) or col == "target_filled"
+    mandatory_log_columns = [
+        "amount_new_house_transactions_lag_1",
+        "amount_new_house_transactions_rolling_mean_3",
     ]
+    for column in mandatory_log_columns:
+        if column in features_df.columns and column not in seen_sources:
+            log_sources.append(column)
+            seen_sources.add(column)
 
-    df.sort_values(["sector_id", "month"], inplace=True)
-    grouped = df.groupby("sector_id", sort=False)
+    log_features = _create_log1p_features(features_df, log_sources)
+    categories["log1p"].extend(log_features)
 
-    for col in value_cols:
-        for lag in LAG_STEPS:
-            lag_col = f"{col}_lag_{lag}"
-            df[lag_col] = grouped[col].shift(lag)
-            metadata["lag_features"].append(lag_col)
-        for window in ROLLING_WINDOWS:
-            shifted = grouped[col].shift(1)
-            mean_col = f"{col}_rolling_mean_{window}"
-            std_col = f"{col}_rolling_std_{window}"
-            min_col = f"{col}_rolling_min_{window}"
-            max_col = f"{col}_rolling_max_{window}"
-            count_col = f"{col}_rolling_count_{window}"
+    if reports_path is not None:
+        reports_path.mkdir(parents=True, exist_ok=True)
+        missing_path = reports_path / "missing_value_report.json"
+        with missing_path.open("w", encoding="utf-8") as handle:
+            json.dump(missing_report, handle, indent=2, ensure_ascii=False)
 
-            df[mean_col] = shifted.groupby(df["sector_id"]).rolling(window=window, min_periods=1).mean().reset_index(level=0, drop=True)
-            df[std_col] = shifted.groupby(df["sector_id"]).rolling(window=window, min_periods=1).std(ddof=0).reset_index(level=0, drop=True)
-            df[min_col] = shifted.groupby(df["sector_id"]).rolling(window=window, min_periods=1).min().reset_index(level=0, drop=True)
-            df[max_col] = shifted.groupby(df["sector_id"]).rolling(window=window, min_periods=1).max().reset_index(level=0, drop=True)
-            df[count_col] = shifted.groupby(df["sector_id"]).rolling(window=window, min_periods=1).count().reset_index(level=0, drop=True)
+    inventory = _build_inventory(features_df, categories)
+    feature_columns = inventory["feature_columns"]
 
-            metadata["rolling_mean_features"].append(mean_col)
-            metadata["rolling_std_features"].append(std_col)
-            metadata["rolling_min_features"].append(min_col)
-            metadata["rolling_max_features"].append(max_col)
-            metadata["rolling_count_features"].append(count_col)
-
-        lag1 = df[f"{col}_lag_1"]
-        lag3 = df[f"{col}_lag_3"]
-        growth_1 = f"{col}_growth_1"
-        growth_3 = f"{col}_growth_3"
-        df[growth_1] = np.where(lag1.abs() > 0, (df[col] - lag1) / (lag1.abs() + 1e-6), 0.0)
-        df[growth_3] = np.where(lag3.abs() > 0, (df[col] - lag3) / (lag3.abs() + 1e-6), 0.0)
-        df.loc[lag1.isna(), growth_1] = 0.0
-        df.loc[lag3.isna(), growth_3] = 0.0
-        df[growth_1 + "_was_missing"] = lag1.isna().astype(np.int8)
-        df[growth_3 + "_was_missing"] = lag3.isna().astype(np.int8)
-        metadata["growth_features"].extend([growth_1, growth_3])
-
-    return df, metadata
-
-
-def _population_weighted_features(df: pd.DataFrame, metrics: List[str]) -> Tuple[pd.DataFrame, List[str]]:
-    share_features: List[str] = []
-    weights = df["resident_population"].replace({0: np.nan})
-    weights = weights.fillna(df.get("population_scale", 1.0))
-    weights = weights.fillna(1.0)
-
-    for col in metrics:
-        weighted_sum = (df[col] * weights).groupby(df["month"]).transform("sum")
-        weight_total = weights.groupby(df["month"]).transform("sum")
-        simple_mean = df.groupby("month")[col].transform("mean")
-        mean_col = f"{col}_city_weighted_mean"
-        df[mean_col] = np.where(weight_total != 0, weighted_sum / weight_total, simple_mean)
-        share_col = f"{col}_share"
-        df[share_col] = df[col] / (df[mean_col] + 1e-6)
-        share_features.append(share_col)
-
-    return df, share_features
-
-
-def _interaction_terms(df: pd.DataFrame) -> List[str]:
-    interaction_cols: List[str] = []
-    for col in df.columns:
-        if col.endswith("_nearby"):
-            base = col[: -len("_nearby")]
-            if base in df.columns:
-                diff_col = f"{base}_vs_nearby_diff"
-                df[diff_col] = df[base] - df[col]
-                interaction_cols.append(diff_col)
-    return interaction_cols
-
-
-def _search_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
-    search_cols = [col for col in df.columns if col.startswith("search_kw_") and not col.endswith("_was_missing")]
-    derived_cols: List[str] = []
-    if not search_cols:
-        return df, derived_cols
-
-    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
-    grouped = df.groupby("sector_id", sort=False)
-    zscore_cols = []
-
-    for col in search_cols:
-        pct_col = f"{col}_pct_change"
-        z_col = f"{col}_zscore_3m"
-        prev = grouped[col].shift(1)
-        df[pct_col] = np.where(prev.abs() > 0, (df[col] - prev) / (prev.abs() + 1e-6), 0.0)
-        mean = prev.groupby(df["sector_id"]).rolling(window=3, min_periods=1).mean().reset_index(level=0, drop=True)
-        std = prev.groupby(df["sector_id"]).rolling(window=3, min_periods=1).std(ddof=0).reset_index(level=0, drop=True)
-        df[z_col] = np.where(std > 0, (prev - mean) / std, 0.0)
-        df[z_col] = df[z_col].fillna(0.0)
-        derived_cols.extend([pct_col, z_col])
-        zscore_cols.append(z_col)
-
-    if zscore_cols:
-        mean_z = df[zscore_cols].mean(axis=1)
-        density_cols = [col for col in df.columns if col.endswith("_dense")]
-        for col in density_cols:
-            adj_col = f"{col}_density_adj"
-            df[adj_col] = df[col] * mean_z
-            derived_cols.append(adj_col)
-    return df, derived_cols
-
-
-def _apply_log_transforms(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
-    log_cols = [
-        col
-        for col in df.columns
-        if col.startswith(("num_", "area_", "amount_", "number_of_"))
-        or col.endswith("_dense")
-        or col == "target_filled"
-    ]
-    transformed: List[str] = []
-    for col in log_cols:
-        log_col = f"{col}_log1p"
-        df[log_col] = np.log1p(df[col])
-        transformed.append(log_col)
-    return df, transformed
-
-
-def _run_poi_pca(df: pd.DataFrame, log_density_cols: List[str]) -> Tuple[pd.DataFrame, List[str]]:
-    from sklearn.decomposition import PCA
-
-    if len(log_density_cols) < 2:
-        return df, []
-    matrix = df[log_density_cols].fillna(0.0)
-    if matrix.var().sum() == 0:
-        return df, []
-    pca = PCA()
-    pca.fit(matrix)
-    cumulative = np.cumsum(pca.explained_variance_ratio_)
-    n_components = int(np.searchsorted(cumulative, 0.95) + 1)
-    n_components = min(n_components, matrix.shape[1])
-    pca = PCA(n_components=n_components)
-    components = pca.fit_transform(matrix)
-    cols: List[str] = []
-    for idx in range(components.shape[1]):
-        name = f"poi_pca_{idx + 1}"
-        df[name] = components[:, idx]
-        cols.append(name)
-    return df, cols
-
-
-def build_feature_matrix_v2(
-    panel_df: pd.DataFrame,
-    features_path: str | Path | None = None,
-    reports_dir: str | Path | None = None,
-) -> Tuple[pd.DataFrame, Dict[str, List[str]]]:
-    df = _ensure_datetime(panel_df)
-    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
-
-    df, missing_report = _apply_missing_value_policy(df)
-
-    df = _compute_time_features(df)
-
-    metric_base_cols = [
-        col
-        for col in df.columns
-        if col.startswith(("num_", "area_", "amount_", "price_", "total_price_")) or col == "target_filled"
-    ]
-    df, lag_metadata = _compute_lag_and_rolling(df)
-    df, share_features = _population_weighted_features(df, metric_base_cols)
-    interaction_features = _interaction_terms(df)
-    df, search_features = _search_features(df)
-    df, log_features = _apply_log_transforms(df)
-    density_log_cols = [col for col in log_features if col.endswith("_dense_log1p")]
-    df, poi_pca_cols = _run_poi_pca(df, density_log_cols)
-
-    metadata: Dict[str, List[str]] = {
-        **lag_metadata,
-        "share_features": share_features,
-        "interaction_features": interaction_features,
-        "search_features": search_features,
-        "log1p_features": log_features,
-        "poi_pca_features": poi_pca_cols,
-    }
-
-    if reports_dir is not None:
-        reports_dir = Path(reports_dir)
-        reports_dir.mkdir(parents=True, exist_ok=True)
-        report_path = reports_dir / "missing_value_report.json"
-        with report_path.open("w", encoding="utf-8") as fp:
-            json.dump(missing_report, fp, indent=2)
-
-        metadata_path = reports_dir / "feature_metadata.json"
-        with metadata_path.open("w", encoding="utf-8") as fp:
-            json.dump(metadata, fp, indent=2)
+    if not FEATURE_COUNT_MIN <= len(feature_columns) <= FEATURE_COUNT_MAX:
+        counts = {k: len(v) for k, v in inventory["by_category"].items()}
+        categorized = set().union(*inventory["by_category"].values())
+        uncategorized = sorted(set(feature_columns) - categorized)
+        raise ValueError(
+            f"feature count {len(feature_columns)} outside expected range; "
+            f"by_category_counts={counts}; uncategorized={uncategorized}"
+        )
 
     if features_path is not None:
         features_path = Path(features_path)
-        if features_path.exists():
-            if features_path.is_dir():
-                for item in features_path.glob("**/*"):
-                    if item.is_file():
-                        item.unlink()
-                for item in sorted(features_path.glob("*"), reverse=True):
-                    if item.is_dir():
-                        item.rmdir()
-            else:
-                features_path.unlink()
-        df.assign(year=df["month"].dt.year).to_parquet(features_path, index=False, partition_cols=["year"])
+        features_path.parent.mkdir(parents=True, exist_ok=True)
+        export_df = features_df.copy()
+        export_df["year"] = export_df["month"].dt.year.astype(np.int16)
+        export_df.to_parquet(features_path, index=False, partition_cols=["year"])
 
-    return df, metadata
+    if reports_path is not None:
+        inventory_path = reports_path / "feature_inventory_v3.json"
+        with inventory_path.open("w", encoding="utf-8") as handle:
+            json.dump({k: v for k, v in inventory.items() if k != "feature_columns"}, handle, indent=2, ensure_ascii=False)
+
+    metadata = {
+        "selected_search_keywords": selected_search,
+        "inventory": {k: v for k, v in inventory.items() if k != "feature_columns"},
+    }
+
+    return features_df, metadata
+
+
+def _add_time_features(df: pd.DataFrame) -> None:
+    df["year"] = df["month"].dt.year.astype(np.int16)
+    df["month_num"] = df["month"].dt.month.astype(np.int8)
+    df["quarter"] = df["month"].dt.quarter.astype(np.int8)
+    start_year = df["month"].dt.year.min()
+    start_month = df["month"].dt.month.min()
+    df["month_index"] = (
+        (df["month"].dt.year - start_year) * 12 + (df["month"].dt.month - start_month)
+    ).astype(np.int32)
+    df["days_in_month"] = df["month"].dt.daysinmonth.astype(np.int8)
+    df["is_year_start"] = (df["month"].dt.month == 1).astype(np.int8)
+    df["is_year_end"] = (df["month"].dt.month == 12).astype(np.int8)
+
+
+def _add_missing_flags(
+    df: pd.DataFrame,
+    forecast_start: pd.Timestamp,
+    report: List[dict],
+) -> pd.DataFrame:
+    df = df.sort_values(["sector_id", "month"]).reset_index(drop=True)
+
+    for column in RAW_MONTHLY_COLUMNS:
+        if column in df.columns and f"{column}_was_missing" not in df.columns:
+            df[f"{column}_was_missing"] = df[column].isna().astype(np.int8)
+
+    _apply_missing_policy_counts(df, RAW_MONTHLY_COLUMNS, forecast_start, report)
+    _apply_missing_policy_prices(df, forecast_start, report)
+    _apply_missing_policy_city(df, forecast_start, report)
+    _apply_missing_policy_search(df, forecast_start, report)
+
+    if not report:
+        report.append(
+            {
+                "column": "__no_imputation__",
+                "strategy": "none",
+                "filled": 0,
+                "projection_stage": "observed",
+            }
+        )
+
+    return df
+
+
+def _apply_missing_policy_counts(
+    df: pd.DataFrame,
+    columns: Iterable[str],
+    forecast_start: pd.Timestamp,
+    report: List[dict],
+) -> None:
+    for column in columns:
+        if column not in df.columns:
+            continue
+
+        mask_before = df[column].isna()
+        df[column] = df.groupby("sector_id")[column].ffill()
+        _log_imputation(report, column, "sector_ffill", mask_before & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            rolling = (
+                df.groupby("sector_id")[column]
+                .transform(lambda s: s.shift(1).rolling(window=12, min_periods=3).median())
+            )
+            df.loc[mask_missing, column] = rolling.loc[mask_missing]
+            _log_imputation(report, column, "rolling_median_12", mask_missing & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            global_median = float(df[column].median(skipna=True)) if not df[column].dropna().empty else 0.0
+            df.loc[mask_missing, column] = global_median
+            _log_imputation(report, column, "global_median", mask_missing & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            df.loc[mask_missing, column] = 0.0
+            _log_imputation(report, column, "fill_zero", mask_missing, forecast_start, df)
+
+
+def _apply_missing_policy_prices(
+    df: pd.DataFrame,
+    forecast_start: pd.Timestamp,
+    report: List[dict],
+) -> None:
+    price_columns = [
+        col
+        for col in df.columns
+        if (col.startswith("price_") or col.startswith("total_price_") or col.startswith("period_"))
+        and "_proj_" not in col
+        and not col.endswith("_was_missing")
+    ]
+    for column in price_columns:
+        if f"{column}_was_missing" not in df.columns:
+            df[f"{column}_was_missing"] = df[column].isna().astype(np.int8)
+
+        mask_before = df[column].isna()
+        df[column] = df.groupby("sector_id")[column].ffill()
+        _log_imputation(report, column, "sector_ffill", mask_before & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            medians = df.groupby("sector_id")[column].transform("median")
+            df.loc[mask_missing, column] = medians.loc[mask_missing]
+            _log_imputation(report, column, "sector_median", mask_missing & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            global_median = float(df[column].median(skipna=True)) if not df[column].dropna().empty else 0.0
+            df.loc[mask_missing, column] = global_median
+            _log_imputation(report, column, "global_median", mask_missing & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            df.loc[mask_missing, column] = 0.0
+            _log_imputation(report, column, "fill_zero", mask_missing, forecast_start, df)
+
+
+def _apply_missing_policy_city(
+    df: pd.DataFrame,
+    forecast_start: pd.Timestamp,
+    report: List[dict],
+) -> None:
+    for column in CITY_FEATURES:
+        if column not in df.columns:
+            continue
+        mask_before = df[column].isna()
+        df[column] = df[column].ffill()
+        _log_imputation(report, column, "ffill", mask_before & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            month_medians = df.groupby(df["month"].dt.month)[column].transform("median")
+            df.loc[mask_missing, column] = month_medians.loc[mask_missing]
+            _log_imputation(report, column, "month_median", mask_missing & df[column].notna(), forecast_start, df)
+
+        mask_missing = df[column].isna()
+        if mask_missing.any():
+            global_median = float(df[column].median(skipna=True)) if not df[column].dropna().empty else 0.0
+            df.loc[mask_missing, column] = global_median
+            _log_imputation(report, column, "global_median", mask_missing & df[column].notna(), forecast_start, df)
+
+
+def _apply_missing_policy_search(
+    df: pd.DataFrame,
+    forecast_start: pd.Timestamp,
+    report: List[dict],
+) -> None:
+    search_columns = [
+        col
+        for col in df.columns
+        if col.startswith("search_kw_")
+        and "_proj_" not in col
+        and "_lag_" not in col
+        and "_rolling_" not in col
+        and "_pct_change" not in col
+        and "_zscore" not in col
+        and not col.endswith("_was_missing")
+    ]
+    for column in search_columns:
+        flag_col = f"{column}_was_missing"
+        if flag_col not in df.columns:
+            df[flag_col] = df[column].isna().astype(np.int8)
+        else:
+            df.loc[df[column].isna(), flag_col] = 1
+        mask_before = df[column].isna()
+        if mask_before.any():
+            df.loc[mask_before, column] = 0.0
+            _log_imputation(report, column, "fill_zero", mask_before, forecast_start, df)
+
+
+def _log_imputation(
+    report: List[dict],
+    column: str,
+    strategy: str,
+    filled_mask: pd.Series,
+    forecast_start: pd.Timestamp,
+    df: pd.DataFrame,
+) -> None:
+    if filled_mask.empty or not filled_mask.any():
+        return
+    observed_mask = df["month"] < forecast_start
+    observed_count = int((filled_mask & observed_mask).sum())
+    forecast_count = int((filled_mask & ~observed_mask).sum())
+    if observed_count:
+        report.append(
+            {
+                "column": column,
+                "strategy": strategy,
+                "filled": observed_count,
+                "projection_stage": "observed",
+            }
+        )
+    if forecast_count:
+        report.append(
+            {
+                "column": column,
+                "strategy": strategy,
+                "filled": forecast_count,
+                "projection_stage": "forecast",
+            }
+        )
+
+
+def _create_lag_features(df: pd.DataFrame) -> List[str]:
+    created = []
+    for step in (1, 3, 6):
+        for column in METRIC_SET_FULL:
+            if column not in df.columns:
+                continue
+            lag_col = f"{column}_lag_{step}"
+            df[lag_col] = (
+                df.groupby("sector_id")[column]
+                .shift(step)
+                .astype(float)
+            )
+            df[lag_col] = df.groupby("sector_id")[lag_col].ffill()
+            df[lag_col] = df[lag_col].fillna(0.0)
+            created.append(lag_col)
+    return created
+
+
+def _create_long_lag_features(df: pd.DataFrame) -> List[str]:
+    created = []
+    for column in METRIC_SET_LONG:
+        if column not in df.columns:
+            continue
+        lag_col = f"{column}_lag_12"
+        df[lag_col] = df.groupby("sector_id")[column].shift(12).astype(float)
+        df[lag_col] = df.groupby("sector_id")[lag_col].ffill().fillna(0.0)
+        created.append(lag_col)
+    return created
+
+
+def _create_rolling_means(df: pd.DataFrame) -> List[str]:
+    created = []
+    for window in (3, 6):
+        for column in METRIC_SET_FULL:
+            if column not in df.columns:
+                continue
+            roll_col = f"{column}_rolling_mean_{window}"
+            df[roll_col] = df.groupby("sector_id")[column].transform(
+                lambda s: s.shift(1).rolling(window=window, min_periods=2).mean()
+            )
+            df[roll_col] = df.groupby("sector_id")[roll_col].ffill().fillna(0.0)
+            created.append(roll_col)
+    for column in METRIC_SET_LONG:
+        if column not in df.columns:
+            continue
+        roll_col = f"{column}_rolling_mean_12"
+        df[roll_col] = df.groupby("sector_id")[column].transform(
+            lambda s: s.shift(1).rolling(window=12, min_periods=2).mean()
+        )
+        df[roll_col] = df.groupby("sector_id")[roll_col].ffill().fillna(0.0)
+        created.append(roll_col)
+    return created
+
+
+def _create_rolling_stds(df: pd.DataFrame) -> List[str]:
+    created = []
+    for window in (3, 6):
+        for column in METRIC_SET_FULL:
+            if column not in df.columns:
+                continue
+            roll_col = f"{column}_rolling_std_{window}"
+            df[roll_col] = df.groupby("sector_id")[column].transform(
+                lambda s: s.shift(1).rolling(window=window, min_periods=2).std(ddof=0)
+            )
+            df[roll_col] = df.groupby("sector_id")[roll_col].ffill().fillna(0.0)
+            created.append(roll_col)
+    return created
+
+
+def _create_growth_features(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
+    growth_cols: List[str] = []
+    flag_cols: List[str] = []
+    for metric in GROWTH_METRICS:
+        if metric not in df.columns:
+            continue
+        for horizon in (1, 3):
+            lag_col = f"{metric}_lag_{horizon}"
+            if lag_col not in df.columns:
+                continue
+            growth_col = f"{metric}_growth_{horizon}"
+            lag_values = df[lag_col]
+            current_values = df[metric]
+            ratio = (current_values - lag_values) / (np.abs(lag_values) + 1e-6)
+            missing_flag = lag_values.isna().astype(np.int8)
+            ratio = ratio.fillna(0.0)
+            df[growth_col] = ratio
+            df[f"{growth_col}_was_missing"] = missing_flag
+            growth_cols.append(growth_col)
+            flag_cols.append(f"{growth_col}_was_missing")
+    return growth_cols, flag_cols
+
+
+def _create_share_features(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
+    share_cols: List[str] = []
+    weighted_cols: List[str] = []
+    resident = df.get("resident_population")
+    population_scale = df.get("population_scale")
+    if resident is None or population_scale is None:
+        return share_cols, weighted_cols
+
+    resident_values = resident.astype(float)
+    scale_values = population_scale.astype(float)
+    weights_array = np.where(
+        resident_values > 0,
+        resident_values,
+        np.where(scale_values > 0, scale_values, 1.0),
+    )
+    weights = pd.Series(np.nan_to_num(weights_array, nan=1.0), index=df.index)
+    for metric in SHARE_METRICS:
+        if metric not in df.columns:
+            continue
+        metric_values = df[metric].astype(float)
+        weighted_col = f"{metric}_city_weighted_mean"
+        share_col = f"{metric}_share"
+
+        weighted_sum = (metric_values * weights).groupby(df["month"]).transform("sum")
+        weight_sum = weights.groupby(df["month"]).transform("sum")
+        with np.errstate(divide="ignore", invalid="ignore"):
+            city_weighted = weighted_sum / weight_sum.replace(0.0, np.nan)
+        month_mean = metric_values.groupby(df["month"]).transform("mean")
+        global_mean = float(metric_values.mean()) if not metric_values.dropna().empty else 0.0
+        city_weighted = city_weighted.fillna(month_mean)
+        city_weighted = city_weighted.fillna(global_mean)
+        df[weighted_col] = city_weighted.fillna(0.0)
+
+        df[share_col] = metric_values / (df[weighted_col] + 1e-6)
+        df[share_col] = df[share_col].replace([np.inf, -np.inf], 0.0).fillna(0.0)
+        share_cols.append(share_col)
+        weighted_cols.append(weighted_col)
+    return share_cols, weighted_cols
+
+
+def _create_log1p_features(
+    df: pd.DataFrame,
+    columns: Iterable[str],
+    max_new_features: int | None = None,
+    seen: set[str] | None = None,
+) -> List[str]:
+    created: List[str] = []
+    seen = set() if seen is None else seen
+    for column in columns:
+        if max_new_features is not None and len(created) >= max_new_features:
+            break
+        if column not in df.columns or column in seen:
+            continue
+        log_col = f"{column}_log1p"
+        df[log_col] = np.log1p(np.clip(df[column].astype(float), 0.0, None))
+        created.append(log_col)
+        seen.add(column)
+    return created
+
+
+def _select_search_keywords(
+    df: pd.DataFrame,
+    forecast_start: pd.Timestamp,
+    limit: int,
+    report_path: Path | None,
+) -> List[str]:
+    search_cols = [
+        col
+        for col in df.columns
+        if col.startswith("search_kw_")
+        and "_lag_" not in col
+        and "_rolling_" not in col
+        and "_pct_change" not in col
+        and "_zscore" not in col
+        and not col.endswith("_was_missing")
+    ]
+    variances = []
+    observed_mask = df["month"] <= TARGET_CUTOFF
+    for col in search_cols:
+        var = df.loc[observed_mask, col].var(ddof=0)
+        variances.append((col, 0.0 if pd.isna(var) else float(var)))
+    variances.sort(key=lambda item: item[1], reverse=True)
+    selected = [col for col, _ in variances[:limit]]
+    if report_path is not None:
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with report_path.open("w", encoding="utf-8") as handle:
+            json.dump({"selected": selected, "variance": variances}, handle, indent=2, ensure_ascii=False)
+    return selected
+
+
+def _create_search_features(df: pd.DataFrame, selected: List[str]) -> List[str]:
+    created: List[str] = []
+    for col in selected:
+        lag_col = f"{col}_lag_1"
+        rolling_col = f"{col}_rolling_mean_3"
+        pct_col = f"{col}_pct_change_1"
+        z_col = f"{col}_zscore_3m"
+
+        lag_series = df.groupby("sector_id")[col].shift(1)
+        df[lag_col] = lag_series.fillna(0.0)
+
+        df[rolling_col] = df.groupby("sector_id")[col].transform(
+            lambda s: s.shift(1).rolling(window=3, min_periods=1).mean()
+        )
+        df[rolling_col] = df[rolling_col].fillna(0.0)
+
+        df[pct_col] = (df[col] - df[lag_col]) / (np.abs(df[lag_col]) + 1e-6)
+        df[pct_col] = df[pct_col].replace([np.inf, -np.inf], 0.0).fillna(0.0)
+
+        mean = df.groupby("sector_id")[col].transform(
+            lambda s: s.shift(1).rolling(window=3, min_periods=1).mean()
+        )
+        std = df.groupby("sector_id")[col].transform(
+            lambda s: s.shift(1).rolling(window=3, min_periods=1).std(ddof=0)
+        )
+        df[z_col] = (df[col] - mean) / (std + 1e-6)
+        df[z_col] = df[z_col].replace([np.inf, -np.inf], 0.0).fillna(0.0)
+
+        created.extend([lag_col, rolling_col, pct_col, z_col])
+    return created
+
+
+def _drop_unselected_search_columns(df: pd.DataFrame, selected: List[str]) -> None:
+    search_cols = [
+        col
+        for col in df.columns
+        if col.startswith("search_kw_")
+        and "_lag_" not in col
+        and "_rolling_" not in col
+        and "_pct_change" not in col
+        and "_zscore" not in col
+        and not col.endswith("_was_missing")
+    ]
+    drop_cols = [col for col in search_cols if col not in selected]
+    drop_flags = [f"{col}_was_missing" for col in drop_cols]
+    df.drop(columns=drop_cols + drop_flags, inplace=True, errors="ignore")
+
+
+def _create_poi_pca(df: pd.DataFrame, reports_dir: Path | str | None) -> List[str]:
+    poi_columns = [
+        col
+        for col in df.columns
+        if (col.endswith("_dense") or col.startswith("number_of_"))
+        and col not in POI_CORE_COLUMNS
+    ]
+    if not poi_columns:
+        df["poi_pca_1"] = 0.0
+        df["poi_pca_2"] = 0.0
+        if reports_dir is not None:
+            reports_path = Path(reports_dir)
+            reports_path.mkdir(parents=True, exist_ok=True)
+            summary = {
+                "original_feature_count": 0,
+                "explained_variance_ratio": [0.0, 0.0],
+                "columns": [],
+                "used_pca": False,
+            }
+            with (reports_path / "poi_pca_summary.json").open("w", encoding="utf-8") as handle:
+                json.dump(summary, handle, indent=2, ensure_ascii=False)
+        return ["poi_pca_1", "poi_pca_2"]
+
+    sector_poi = df[["sector_id", *poi_columns]].drop_duplicates("sector_id")
+    matrix = sector_poi[poi_columns].fillna(0.0).astype(float)
+    matrix = np.log1p(np.clip(matrix, 0.0, None))
+    if matrix.shape[1] < 2:
+        fallback = matrix.iloc[:, 0] if matrix.shape[1] == 1 else pd.Series(0.0, index=matrix.index)
+        fallback = fallback.reindex(sector_poi.index, fill_value=0.0)
+        mapped = dict(zip(sector_poi["sector_id"], fallback))
+        df.drop(columns=["poi_pca_1", "poi_pca_2"], inplace=True, errors="ignore")
+        df["poi_pca_1"] = df["sector_id"].map(mapped).fillna(0.0)
+        df["poi_pca_2"] = 0.0
+        df.drop(columns=poi_columns, inplace=True, errors="ignore")
+        if reports_dir is not None:
+            reports_path = Path(reports_dir)
+            reports_path.mkdir(parents=True, exist_ok=True)
+            summary = {
+                "original_feature_count": len(poi_columns),
+                "explained_variance_ratio": [1.0, 0.0],
+                "columns": poi_columns,
+                "used_pca": False,
+            }
+            with (reports_path / "poi_pca_summary.json").open("w", encoding="utf-8") as handle:
+                json.dump(summary, handle, indent=2, ensure_ascii=False)
+        return ["poi_pca_1", "poi_pca_2"]
+
+    pca = PCA(n_components=2, random_state=42)
+    transformed = pca.fit_transform(matrix)
+    poi_features = ["poi_pca_1", "poi_pca_2"]
+    mapping = pd.DataFrame(
+        {
+            "sector_id": sector_poi["sector_id"],
+            "poi_pca_1": transformed[:, 0],
+            "poi_pca_2": transformed[:, 1],
+        }
+    )
+    df.drop(columns=poi_features, inplace=True, errors="ignore")
+    map_1 = dict(zip(mapping["sector_id"], mapping["poi_pca_1"]))
+    map_2 = dict(zip(mapping["sector_id"], mapping["poi_pca_2"]))
+    df["poi_pca_1"] = df["sector_id"].map(map_1).fillna(0.0)
+    df["poi_pca_2"] = df["sector_id"].map(map_2).fillna(0.0)
+    df.drop(columns=poi_columns, inplace=True, errors="ignore")
+
+    if reports_dir is not None:
+        reports_path = Path(reports_dir)
+        reports_path.mkdir(parents=True, exist_ok=True)
+        summary = {
+            "original_feature_count": len(poi_columns),
+            "explained_variance_ratio": list(map(float, pca.explained_variance_ratio_)),
+            "columns": poi_columns,
+            "used_pca": True,
+        }
+        with (reports_path / "poi_pca_summary.json").open("w", encoding="utf-8") as handle:
+            json.dump(summary, handle, indent=2, ensure_ascii=False)
+
+    return poi_features
+
+
+def _build_inventory(df: pd.DataFrame, categories: Dict[str, List[str]]) -> dict:
+    unique_categories = {key: sorted(set(value)) for key, value in categories.items()}
+
+    feature_columns = [
+        col
+        for col in df.columns
+        if col not in {"month", "id", "target"}
+    ]
+    total = len(feature_columns)
+
+    inventory = {
+        "total_features": total,
+        "by_category": unique_categories,
+        "feature_columns": feature_columns,
+    }
+    return inventory
