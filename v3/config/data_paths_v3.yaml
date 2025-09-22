@@ -1,7 +1,8 @@
-train_dir: ../train
-test_path: ../test.csv
-sample_submission: ../sample_submission.csv
+train_dir: ../../train
+test_path: ../../test.csv
+sample_submission: ../../sample_submission.csv
 processed_dir: data/processed
 panel_path: data/processed/panel_v3.parquet
 features_path: data/processed/features_v3.parquet
 reports_dir: reports_v3
+sector_city_map: sector_city_map_v3.csv

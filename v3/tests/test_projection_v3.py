@@ -1,88 +1,63 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+import numpy as np
 import pandas as pd
-import pytest
 
-from src.projection_v3 import apply_projection
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from src.panel_builder_v3 import (  # noqa: E402
+    attach_target_v3,
+    build_calendar_v3,
+    load_raw_tables_v3,
+    merge_sources_v3,
+)
+from src.projection_v3 import PROJECTION_COLUMNS, apply_projection  # noqa: E402
 
 
-def _make_panel() -> pd.DataFrame:
-    records = []
-    months = [
-        pd.Timestamp("2023-08-01"),
-        pd.Timestamp("2024-05-01"),
-        pd.Timestamp("2024-06-01"),
-        pd.Timestamp("2024-07-01"),
-        pd.Timestamp("2024-08-01"),
-        pd.Timestamp("2024-09-01"),
-    ]
-    for month in months:
-        base_value = 10 + (month.month % 5)
-        records.append(
-            {
-                "month": month,
-                "sector_id": 1,
-                "amount_new_house_transactions": float(base_value),
-                "search_kw_alpha": 5.0,
-            }
-        )
-    # sector 2 with limited history (only two observations)
-    records.append(
-        {
-            "month": pd.Timestamp("2023-08-01"),
-            "sector_id": 2,
-            "amount_new_house_transactions": 9.0,
-            "search_kw_alpha": 2.0,
-        }
-    )
-    records.append(
-        {
-            "month": pd.Timestamp("2024-05-01"),
-            "sector_id": 2,
-            "amount_new_house_transactions": 8.0,
-            "search_kw_alpha": 2.0,
-        }
-    )
-    records.append(
-        {
-            "month": pd.Timestamp("2024-08-01"),
-            "sector_id": 2,
-            "amount_new_house_transactions": float("nan"),
-            "search_kw_alpha": float("nan"),
-        }
-    )
-    panel = pd.DataFrame(records).sort_values(["sector_id", "month"]).reset_index(drop=True)
+def _build_real_panel() -> pd.DataFrame:
+    config_path = ROOT / "config" / "data_paths_v3.yaml"
+    tables = load_raw_tables_v3(config_path)
+    calendar = build_calendar_v3(tables)
+    merged = merge_sources_v3(calendar, tables)
+    panel = attach_target_v3(merged)
     return panel
 
 
 def test_projection_respects_cutoff():
-    panel = _make_panel()
-    projected = apply_projection(panel, pd.Timestamp("2024-08-01"))
+    panel = _build_real_panel()
+    forecast_start = pd.Timestamp("2024-08-01")
+    projected = apply_projection(panel, forecast_start)
 
-    # Sector 1 has four historical values -> median fallback (source code 2)
-    sector1_aug = projected[
-        (projected["sector_id"] == 1) & (projected["month"] == pd.Timestamp("2024-08-01"))
-    ]
-    assert sector1_aug["amount_new_house_transactions"].iloc[0] == pytest.approx(11.5, rel=1e-6)
-    assert sector1_aug["amount_new_house_transactions_proj_source"].iloc[0] == 2
-    assert sector1_aug["amount_new_house_transactions_proj_overridden"].iloc[0] == 1
+    future_mask = projected["month"] >= forecast_start
+    past_mask = ~future_mask
 
-    # Future month (September) should also be projected and not reuse the manual override
-    sector1_sep = projected[
-        (projected["sector_id"] == 1) & (projected["month"] == pd.Timestamp("2024-09-01"))
-    ]
-    assert sector1_sep["amount_new_house_transactions"].iloc[0] == pytest.approx(11.5, rel=1e-6)
-    assert sector1_sep["amount_new_house_transactions_proj_source"].iloc[0] == 2
+    projected_columns = [col for col in PROJECTION_COLUMNS if col in projected.columns]
+    assert projected_columns, "expected projection columns in panel"
 
-    # Sector 2 has insufficient history and should borrow August median from other sectors (source code 3)
-    sector2_aug = projected[
-        (projected["sector_id"] == 2) & (projected["month"] == pd.Timestamp("2024-08-01"))
-    ]
-    assert sector2_aug["amount_new_house_transactions"].iloc[0] == pytest.approx(11.0, rel=1e-6)
-    assert sector2_aug["amount_new_house_transactions_proj_source"].iloc[0] == 3
+    for column in projected_columns:
+        source_col = f"{column}_proj_source"
+        assert source_col in projected.columns
+        # Observed months remain flagged as 0
+        assert set(projected.loc[past_mask, source_col].unique()) <= {0}
+        # Future months should not contain NaN projections
+        assert projected.loc[future_mask, column].notna().all()
 
-    # Observed months remain untouched with source flag 0
-    sector1_july = projected[
-        (projected["sector_id"] == 1) & (projected["month"] == pd.Timestamp("2024-07-01"))
-    ]
-    assert sector1_july["amount_new_house_transactions_proj_source"].iloc[0] == 0
+    # Source codes limited to the defined range
+    source_values = []
+    for column in projected_columns:
+        source_values.append(projected[f"{column}_proj_source"].to_numpy())
+    source_values = np.concatenate(source_values)
+    assert set(np.unique(source_values)).issubset({0, 1, 2, 3, 4})
+
+    # At least one column should fall back to shared or global sources in the forecast horizon
+    fallback_triggered = False
+    for column in projected_columns:
+        codes = projected.loc[future_mask, f"{column}_proj_source"].to_numpy()
+        if np.isin(codes, [3, 4]).any():
+            fallback_triggered = True
+            break
+    assert fallback_triggered

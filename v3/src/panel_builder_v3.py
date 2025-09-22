@@ -28,7 +28,6 @@ MONTH_RANGE = pd.date_range("2019-01-01", "2024-12-01", freq="MS")
 TARGET_CUTOFF = pd.Timestamp("2024-07-31")
 FORECAST_MONTHS = pd.date_range("2024-08-01", "2024-12-01", freq="MS")
 
-
 MONTHLY_TABLE_KEYS = (
     "new_house_transactions",
     "new_house_transactions_nearby_sectors",
@@ -67,10 +66,10 @@ POI_CORE_COLUMNS = [
 
 
 def _normalize_column_name(name: str) -> str:
-    normalized = unicodedata.normalize("NFKC", name).strip()
+    normalized = unicodedata.normalize("NFKC", str(name)).strip()
     normalized = re.sub(r"[^0-9A-Za-z]+", "_", normalized)
-    normalized = re.sub(r"_+", "_", normalized)
-    return normalized.strip("_").lower()
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized.lower()
 
 
 def _normalize_text_value(value: object) -> object:
@@ -96,10 +95,17 @@ def _resolve_path(config_path: Path, value: str | Path) -> Path:
 
 
 def _slugify_keyword(text: str) -> str:
-    ascii_text = unicodedata.normalize("NFKC", text).strip().lower()
+    ascii_text = unicodedata.normalize("NFKC", str(text)).strip().lower()
     ascii_text = re.sub(r"\s+", "_", ascii_text)
     ascii_text = re.sub(r"[^0-9a-z_]+", "", ascii_text)
     return ascii_text
+
+
+def _parse_month_series(series: pd.Series) -> pd.Series:
+    parsed = pd.to_datetime(series, errors="coerce")
+    if parsed.isna().any():
+        parsed = pd.to_datetime(series, format="%Y-%b", errors="coerce")
+    return parsed
 
 
 def load_raw_tables_v3(config_path: Path) -> dict[str, pd.DataFrame]:
@@ -117,7 +123,8 @@ def load_raw_tables_v3(config_path: Path) -> dict[str, pd.DataFrame]:
         raise KeyError("data config must include 'train_dir'")
     train_dir = _resolve_path(config_path, train_dir_value)
 
-    mapping = {
+    tables: dict[str, pd.DataFrame] = {}
+    file_mapping = {
         "new_house_transactions": "new_house_transactions.csv",
         "new_house_transactions_nearby_sectors": "new_house_transactions_nearby_sectors.csv",
         "pre_owned_house_transactions": "pre_owned_house_transactions.csv",
@@ -136,8 +143,7 @@ def load_raw_tables_v3(config_path: Path) -> dict[str, pd.DataFrame]:
         "indexes": {"city_indicator_data_year": "Int64"},
     }
 
-    tables: dict[str, pd.DataFrame] = {}
-    for key, filename in mapping.items():
+    for key, filename in file_mapping.items():
         table_path = train_dir / filename
         if not table_path.exists():
             raise FileNotFoundError(f"Missing required data file: {table_path}")
@@ -157,13 +163,9 @@ def load_raw_tables_v3(config_path: Path) -> dict[str, pd.DataFrame]:
         df.columns = [_normalize_column_name(col) for col in df.columns]
         df = _normalize_dataframe(df)
 
-        if "sector" in df.columns:
-            df["sector"] = df["sector"].str.replace(r"\s+", " ", regex=True)
-
         if key == "city_search_index":
-            df["keyword"] = df["keyword"].astype(str).map(_normalize_text_value)
-            df["source"] = df["source"].astype(str).map(_normalize_text_value)
-            df["keyword_slug"] = df["keyword"].astype(str).map(_slugify_keyword)
+            df["keyword_slug"] = df["keyword"].map(_slugify_keyword)
+
         tables[key] = df
 
     test_path_value = config.get("test_path")
@@ -176,15 +178,51 @@ def load_raw_tables_v3(config_path: Path) -> dict[str, pd.DataFrame]:
     test_df.columns = [_normalize_column_name(col) for col in test_df.columns]
     tables["test"] = _normalize_dataframe(test_df)
 
-    sample_submission_value = config.get("sample_submission")
-    if sample_submission_value is None:
+    sample_path_value = config.get("sample_submission")
+    if sample_path_value is None:
         raise KeyError("data config must include 'sample_submission'")
-    sample_path = _resolve_path(config_path, sample_submission_value)
+    sample_path = _resolve_path(config_path, sample_path_value)
     if not sample_path.exists():
         raise FileNotFoundError(f"Missing sample submission file: {sample_path}")
     sample_df = pd.read_csv(sample_path, dtype={"id": "string"}, encoding="utf-8")
     sample_df.columns = [_normalize_column_name(col) for col in sample_df.columns]
     tables["sample_submission"] = _normalize_dataframe(sample_df)
+
+    sector_map_value = config.get("sector_city_map")
+    if sector_map_value is None:
+        raise KeyError("data config must include 'sector_city_map'")
+    sector_map_path = _resolve_path(config_path, sector_map_value)
+    if not sector_map_path.exists():
+        raise FileNotFoundError(f"Missing sector-city mapping file: {sector_map_path}")
+    sector_map_df = pd.read_csv(
+        sector_map_path, dtype={"sector": "string", "city_id": "int32"}, encoding="utf-8"
+    )
+    sector_map_df.columns = [_normalize_column_name(col) for col in sector_map_df.columns]
+    if {"sector", "city_id"} - set(sector_map_df.columns):
+        raise ValueError("sector_city_map file must contain 'sector' and 'city_id' columns")
+    sector_map_df = _normalize_dataframe(sector_map_df)
+    sector_map_df["city_id"] = pd.to_numeric(
+        sector_map_df["city_id"], errors="raise"
+    ).astype(np.int16)
+    tables["sector_city_map"] = sector_map_df
+
+    observed_sectors: set[str] = set()
+    for key in MONTHLY_TABLE_KEYS:
+        if "sector" not in tables[key].columns:
+            raise KeyError(f"Table '{key}' is missing 'sector' column")
+        observed_sectors.update(tables[key]["sector"].dropna().unique().tolist())
+
+    if "test" in tables:
+        test_ids = tables["test"].get("id")
+        if test_ids is not None:
+            extracted = test_ids.dropna().str.extract(r"(sector \d+)")[0].dropna().unique()
+            observed_sectors.update(extracted.tolist())
+
+    missing_in_map = sorted(observed_sectors - set(sector_map_df["sector"]))
+    if missing_in_map:
+        raise ValueError(
+            "sector_city_map missing sector assignments: " + ", ".join(missing_in_map)
+        )
 
     return tables
 
@@ -192,42 +230,31 @@ def load_raw_tables_v3(config_path: Path) -> dict[str, pd.DataFrame]:
 def build_calendar_v3(raw_tables: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """Construct the full month-sector calendar for the v3 panel."""
 
-    for key in MONTHLY_TABLE_KEYS:
-        if key not in raw_tables:
-            raise KeyError(f"Missing monthly table '{key}' in raw tables")
+    if "sector_city_map" not in raw_tables:
+        raise KeyError("raw_tables must include 'sector_city_map'")
 
-    sectors: set[str] = set()
-    for key in MONTHLY_TABLE_KEYS:
-        table = raw_tables[key]
-        if "sector" not in table.columns:
-            raise KeyError(f"Table '{key}' is missing the 'sector' column")
-        sectors.update(table["sector"].dropna().unique().tolist())
+    mapping = raw_tables["sector_city_map"]["sector"].dropna().unique().tolist()
+    sectors = sorted(mapping, key=lambda value: int(re.search(r"(\d+)", value).group(1)))
 
-    if "test" in raw_tables and "id" in raw_tables["test"].columns:
-        test_ids = raw_tables["test"]["id"].dropna().astype(str)
-        extracted = test_ids.str.extract(r"(sector \d+)")[0].dropna().unique()
-        sectors.update(extracted)
+    calendar = pd.MultiIndex.from_product(
+        [MONTH_RANGE, sectors], names=["month", "sector"]
+    ).to_frame(index=False)
 
-    sectors = sorted(sectors)
-    if not sectors:
-        raise ValueError("No sectors discovered while building the calendar")
-
-    calendar = (
-        pd.MultiIndex.from_product([MONTH_RANGE, sectors], names=["month", "sector"])
-        .to_frame(index=False)
-        .sort_values(["month", "sector"], ignore_index=True)
+    calendar = calendar.merge(
+        raw_tables["sector_city_map"], on="sector", how="left", validate="many_to_one"
     )
+
+    if calendar["city_id"].isna().any():
+        missing = calendar.loc[calendar["city_id"].isna(), "sector"].unique()
+        raise ValueError(f"Missing city_id assignments for sectors: {missing}")
 
     try:
         sector_id = calendar["sector"].str.extract(r"(\d+)")[0].astype(int)
-    except Exception as exc:  # pragma: no cover - defensive
+    except Exception as exc:  # pragma: no cover - defensive guard
         raise ValueError("Unable to parse sector identifiers") from exc
 
-    if sector_id.isna().any():
-        missing = calendar.loc[sector_id.isna(), "sector"].unique()
-        raise ValueError(f"Unable to parse sector identifiers: {missing}")
-
     calendar["sector_id"] = sector_id.astype(np.int32)
+    calendar["city_id"] = calendar["city_id"].astype(np.int16)
     return calendar
 
 
@@ -238,10 +265,19 @@ def merge_sources_v3(calendar_df: pd.DataFrame, raw_tables: dict[str, pd.DataFra
 
     for key in MONTHLY_TABLE_KEYS:
         table = raw_tables[key].copy()
-        table["month"] = pd.to_datetime(table["month"], errors="coerce")
+        if "month" not in table.columns or "sector" not in table.columns:
+            raise KeyError(f"Table '{key}' requires 'month' and 'sector' columns")
+        table["month"] = _parse_month_series(table["month"])
+        numeric_cols = [col for col in table.columns if col not in {"month", "sector"}]
+        for col in numeric_cols:
+            table[col] = pd.to_numeric(table[col], errors="coerce")
         panel = panel.merge(table, on=["month", "sector"], how="left")
 
     poi = raw_tables["sector_poi"].copy()
+    poi = poi.drop_duplicates("sector")
+    for col in poi.columns:
+        if col != "sector":
+            poi[col] = pd.to_numeric(poi[col], errors="coerce")
     panel = panel.merge(poi, on="sector", how="left")
 
     city_indexes = _prepare_city_indexes(raw_tables["city_indexes"])
@@ -265,16 +301,15 @@ def _prepare_city_indexes(city_df: pd.DataFrame) -> pd.DataFrame:
 
     value_cols = [col for col in df.columns if col != "city_indicator_data_year"]
     renamed = {
-        col: f"city_{col}" if not col.startswith("city_") else col for col in value_cols
+        col: (col if col.startswith("city_") else f"city_{col}") for col in value_cols
     }
     df = df.rename(columns=renamed)
 
-    selected_cols = [col for col in renamed.values() if col in CITY_INDEX_ALLOWED_COLUMNS]
-    missing_cols = sorted(set(CITY_INDEX_ALLOWED_COLUMNS) - set(selected_cols))
-    if missing_cols:
-        for col in missing_cols:
-            df[col] = np.nan
-        selected_cols = CITY_INDEX_ALLOWED_COLUMNS
+    available_cols = [col for col in renamed.values() if col in CITY_INDEX_ALLOWED_COLUMNS]
+    missing_cols = sorted(set(CITY_INDEX_ALLOWED_COLUMNS) - set(available_cols))
+    for col in missing_cols:
+        df[col] = np.nan
+    selected_cols = CITY_INDEX_ALLOWED_COLUMNS
 
     records = []
     for _, row in df.iterrows():
@@ -284,7 +319,7 @@ def _prepare_city_indexes(city_df: pd.DataFrame) -> pd.DataFrame:
             record = {"month": record_month}
             for col in selected_cols:
                 record[col] = row.get(col)
-                record[f"{col}_was_interpolated"] = 1 if month != 1 else 0
+                record[f"{col}_was_interpolated"] = 0 if month == 1 else 1
             records.append(record)
 
     monthly = pd.DataFrame(records)
@@ -306,7 +341,7 @@ def _prepare_search_index(search_df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame({"month": MONTH_RANGE})
 
-    df["month"] = pd.to_datetime(df["month"], errors="coerce")
+    df["month"] = _parse_month_series(df["month"])
     df = df.dropna(subset=["month", "keyword_slug"])
     df = df[df["month"] <= pd.Timestamp("2024-07-31")]
     df["search_volume"] = pd.to_numeric(df.get("search_volume"), errors="coerce")
@@ -316,11 +351,9 @@ def _prepare_search_index(search_df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame({"month": MONTH_RANGE})
 
     agg = df.groupby(["month", "keyword_slug"], as_index=False)["search_volume"].sum()
-    pivot = (
-        agg.pivot(index="month", columns="keyword_slug", values="search_volume")
-        .reindex(MONTH_RANGE)
-        .reset_index()
-    )
+    pivot = agg.pivot(index="month", columns="keyword_slug", values="search_volume")
+    pivot = pivot.reindex(MONTH_RANGE).sort_index()
+    pivot.reset_index(inplace=True)
     pivot.columns = ["month", *[f"search_kw_{slug}" for slug in pivot.columns[1:]]]
     return pivot
 
@@ -340,6 +373,8 @@ def attach_target_v3(panel_df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(f"Unable to parse sector identifiers: {missing}")
     panel["sector_id"] = sector_id.astype(np.int32)
 
+    panel["city_id"] = pd.to_numeric(panel["city_id"], errors="coerce").astype(np.int16)
+
     target_raw = pd.to_numeric(
         panel["amount_new_house_transactions"], errors="coerce"
     )
@@ -350,7 +385,9 @@ def attach_target_v3(panel_df: pd.DataFrame) -> pd.DataFrame:
     panel["target_filled_was_missing"] = target_raw.isna().astype(np.int8)
     panel["is_future"] = (panel["month"] > TARGET_CUTOFF).astype(np.int8)
 
-    panel["id"] = panel["month"].dt.strftime("%Y %b") + "_sector " + panel["sector_id"].astype(str)
+    panel["id"] = (
+        panel["month"].dt.strftime("%Y %b") + "_sector " + panel["sector_id"].astype(str)
+    )
     panel = panel.drop(columns=["sector"], errors="ignore")
     return panel
 
