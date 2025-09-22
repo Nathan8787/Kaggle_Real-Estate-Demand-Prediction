@@ -3,41 +3,78 @@ time_budget_per_fold: 900
 min_trials_per_fold: 25
 metric: competition_score
 task: regression
-estimator_list: ["xgboost"]
+estimator_list: ["xgboost", "lgbm"]
 n_jobs: -1
 gpu_per_trial: 1
-fit_kwargs:
-  tree_method: gpu_hist
-  predictor: gpu_predictor
-  gpu_id: 0
+fit_kwargs_by_estimator:
+  xgboost:
+    tree_method: gpu_hist
+    predictor: gpu_predictor
+    gpu_id: 0
+    objective: reg:tweedie
+    tweedie_variance_power: 1.3
+  lgbm:
+    device_type: cpu
+    boosting_type: gbdt
+    objective: tweedie
+    tweedie_variance_power: 1.3
+zero_inflation:
+  enabled: true
+  method: tweedie
 search_space:
-  n_estimators:
-    _type: randint
-    _value: [400, 1600]
-  max_depth:
-    _type: randint
-    _value: [3, 8]
-  max_leaves:
-    _type: randint
-    _value: [0, 256]
-  learning_rate:
-    _type: loguniform
-    _value: [0.02, 0.12]
-  min_child_weight:
-    _type: loguniform
-    _value: [0.3, 8]
-  subsample:
-    _type: uniform
-    _value: [0.6, 0.95]
-  colsample_bytree:
-    _type: uniform
-    _value: [0.5, 0.9]
-  reg_alpha:
-    _type: loguniform
-    _value: [0.0001, 5]
-  reg_lambda:
-    _type: loguniform
-    _value: [0.5, 10]
-  gamma:
-    _type: uniform
-    _value: [0, 5]
+  xgboost:
+    n_estimators:
+      _type: randint
+      _value: [400, 1600]
+    max_depth:
+      _type: randint
+      _value: [3, 8]
+    max_leaves:
+      _type: randint
+      _value: [0, 256]
+    learning_rate:
+      _type: loguniform
+      _value: [0.02, 0.12]
+    min_child_weight:
+      _type: loguniform
+      _value: [0.3, 8]
+    subsample:
+      _type: uniform
+      _value: [0.6, 0.95]
+    colsample_bytree:
+      _type: uniform
+      _value: [0.5, 0.9]
+    reg_alpha:
+      _type: loguniform
+      _value: [0.0001, 5]
+    reg_lambda:
+      _type: loguniform
+      _value: [0.5, 10]
+    gamma:
+      _type: uniform
+      _value: [0, 5]
+  lgbm:
+    num_leaves:
+      _type: randint
+      _value: [31, 255]
+    max_depth:
+      _type: randint
+      _value: [-1, 12]
+    learning_rate:
+      _type: loguniform
+      _value: [0.01, 0.12]
+    min_child_samples:
+      _type: randint
+      _value: [20, 120]
+    subsample:
+      _type: uniform
+      _value: [0.6, 1.0]
+    colsample_bytree:
+      _type: uniform
+      _value: [0.5, 1.0]
+    reg_alpha:
+      _type: loguniform
+      _value: [0.0001, 5]
+    reg_lambda:
+      _type: loguniform
+      _value: [0.5, 10]

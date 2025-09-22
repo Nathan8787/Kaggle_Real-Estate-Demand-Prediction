@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "FOLD_DEFINITIONS_V3",
     "HOLDOUT_WINDOW",
+    "PURGE_PERIOD",
     "generate_time_series_folds_v3",
 ]
 
@@ -26,24 +27,37 @@ FOLD_DEFINITIONS_V3 = [
 ]
 
 HOLDOUT_WINDOW = ("2019-01-01", "2024-06-30", "2024-07-01", "2024-07-31")
+PURGE_PERIOD = pd.DateOffset(months=1)
+
+
+def _prepare_features(features_df: pd.DataFrame) -> pd.DataFrame:
+    required = {"month", "sector_id", "city_id"}
+    missing = required - set(features_df.columns)
+    if missing:
+        raise KeyError(
+            "features_df must contain the following columns: " + ", ".join(sorted(missing))
+        )
+
+    ordered = features_df.copy()
+    ordered["month"] = pd.to_datetime(ordered["month"], errors="coerce")
+    ordered = ordered.sort_values(["month", "sector_id"]).reset_index(drop=False)
+    return ordered
 
 
 def generate_time_series_folds_v3(
     features_df: pd.DataFrame,
     reports_dir: Path | str | None = None,
 ) -> List[Tuple[np.ndarray, np.ndarray]]:
-    """Generate cross-validation folds aligned with the v3 projection policy."""
+    """Generate CV folds ensuring a one-month purge before validation."""
 
-    if "month" not in features_df.columns or "sector_id" not in features_df.columns:
-        raise KeyError("features_df must contain 'month' and 'sector_id' columns")
-
-    ordered = features_df.sort_values(["month", "sector_id"]).reset_index(drop=False)
-    ordered["month"] = pd.to_datetime(ordered["month"], errors="coerce")
+    ordered = _prepare_features(features_df)
 
     folds: List[Tuple[np.ndarray, np.ndarray]] = []
     records = []
 
-    for train_start, train_end, valid_start, valid_end in FOLD_DEFINITIONS_V3:
+    for fold_id, (train_start, train_end, valid_start, valid_end) in enumerate(
+        FOLD_DEFINITIONS_V3, start=1
+    ):
         train_start_ts = pd.Timestamp(train_start)
         train_end_ts = pd.Timestamp(train_end)
         valid_start_ts = pd.Timestamp(valid_start)
@@ -52,11 +66,17 @@ def generate_time_series_folds_v3(
 
         projected = apply_projection(ordered.copy(), forecast_start)
 
-        train_mask = (
+        purge_start = (forecast_start - PURGE_PERIOD).to_period("M").to_timestamp()
+        purge_mask = (projected["month"] >= purge_start) & (
+            projected["month"] < forecast_start
+        )
+
+        base_train_mask = (
             (projected["month"] >= train_start_ts)
             & (projected["month"] <= train_end_ts)
             & (projected["month"] < forecast_start)
         )
+        train_mask = base_train_mask & (~purge_mask)
         valid_mask = (
             (projected["month"] >= valid_start_ts)
             & (projected["month"] <= valid_end_ts)
@@ -65,10 +85,12 @@ def generate_time_series_folds_v3(
 
         train_idx = projected.loc[train_mask, "index"].to_numpy(dtype=int)
         valid_idx = projected.loc[valid_mask, "index"].to_numpy(dtype=int)
+        purged_rows = int(projected.loc[base_train_mask & purge_mask, "index"].size)
 
         folds.append((train_idx, valid_idx))
         records.append(
             {
+                "fold": fold_id,
                 "train_start": train_start,
                 "train_end": train_end,
                 "valid_start": valid_start,
@@ -76,6 +98,8 @@ def generate_time_series_folds_v3(
                 "forecast_start": forecast_start.strftime("%Y-%m-%d"),
                 "train_size": int(train_idx.size),
                 "valid_size": int(valid_idx.size),
+                "purged_rows": purged_rows,
+                "purge_period_months": 1,
             }
         )
 
