@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import defaultdict
 from pathlib import Path
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -82,6 +84,10 @@ def apply_projection(panel_df: pd.DataFrame, forecast_start: pd.Timestamp) -> pd
 
     if "month" not in panel_df.columns:
         raise KeyError("panel_df must contain a 'month' column")
+    if "sector_id" not in panel_df.columns:
+        raise KeyError("panel_df must contain a 'sector_id' column")
+    if "city_id" not in panel_df.columns:
+        raise KeyError("panel_df must contain a 'city_id' column")
 
     forecast_start = pd.Timestamp(forecast_start).to_period("M").to_timestamp()
     projected = panel_df.copy()
@@ -98,52 +104,59 @@ def apply_projection(panel_df: pd.DataFrame, forecast_start: pd.Timestamp) -> pd
         return projected
 
     for column in projection_columns:
-        observed_mask = (projected["month"] < forecast_start) & projected[column].notna()
-        observed_values = projected.loc[observed_mask, column].astype(float)
-        month_medians = (
-            observed_values.groupby(projected.loc[observed_mask, "month"].dt.month)
-            .median()
-            .to_dict()
+        history_mask = (projected["month"] < forecast_start) & projected[column].notna()
+        history_values_all = projected.loc[history_mask, column].astype(float)
+        global_median = (
+            float(history_values_all.median()) if not history_values_all.empty else np.nan
         )
-        global_median = float(observed_values.median()) if not observed_values.empty else np.nan
+
+        city_month_median: dict[tuple[int, int], float] = {}
+        city_month_count: dict[tuple[int, int], int] = {}
+        if history_mask.any():
+            tmp = projected.loc[history_mask, ["city_id", "month", column]].copy()
+            tmp["month_num"] = tmp["month"].dt.month.astype(int)
+            grouped = tmp.groupby(["city_id", "month_num"])
+            city_month_median = grouped[column].median().to_dict()
+            city_month_count = grouped[column].count().to_dict()
 
         sector_groups = projected.groupby("sector_id", sort=False).groups
         for sector_id, indices in sector_groups.items():
-            history_values: list[float] = []
-            ordered_indices = sorted(indices, key=lambda idx: projected.at[idx, "month"])
+            sector_idx = sorted(indices, key=lambda idx: projected.at[idx, "month"])
+            sector_history = history_values_all[projected.loc[history_mask, "sector_id"] == sector_id]
+            history_list = sector_history.tolist()
 
-            for idx in ordered_indices:
+            for idx in sector_idx:
                 month_value = projected.at[idx, "month"]
-                if pd.isna(month_value):
+                if pd.isna(month_value) or month_value < forecast_start:
                     continue
 
-                cell_value = projected.at[idx, column]
-                if month_value < forecast_start:
-                    if pd.notna(cell_value):
-                        history_values.append(float(cell_value))
-                    continue
-
+                original_value = projected.at[idx, column]
+                city_id = int(projected.at[idx, "city_id"])
                 projected_value, source_code = _project_value(
-                    history_values,
+                    history_list,
                     month_value,
-                    month_medians,
+                    city_id,
+                    city_month_median,
+                    city_month_count,
                     global_median,
                 )
+
                 projected_value = float(np.clip(projected_value, 0.0, None))
-                if pd.notna(cell_value):
+                if pd.notna(original_value):
                     projected.at[idx, f"{column}_proj_overridden"] = 1
                 projected.at[idx, column] = projected_value
                 projected.at[idx, f"{column}_proj_source"] = source_code
-                history_values.append(projected_value)
 
     return projected
 
 
 def _project_value(
-    history_values: list[float],
+    history_values: Iterable[float],
     month_value: pd.Timestamp,
-    month_medians: dict[int, float],
-    global_median: float,
+    city_id: int,
+    city_month_median: dict[tuple[int, int], float],
+    city_month_count: dict[tuple[int, int], int],
+    global_median: float | np.floating | float,
 ) -> tuple[float, int]:
     history = [float(v) for v in history_values if pd.notna(v)]
     n_obs = len(history)
@@ -164,14 +177,14 @@ def _project_value(
         return value, 2
 
     month_key = int(month_value.month)
-    month_median = month_medians.get(month_key)
-    if month_median is not None and not np.isnan(month_median):
-        return float(month_median), 3
+    lookup_key = (city_id, month_key)
+    if city_month_count.get(lookup_key, 0) >= 3:
+        return float(city_month_median.get(lookup_key, 0.0)), 3
 
     if global_median is not None and not np.isnan(global_median):
-        return float(global_median), 3
+        return float(global_median), 4
 
-    return 0.0, 3
+    return 0.0, 4
 
 
 def collect_projection_drift(
@@ -197,14 +210,18 @@ def collect_projection_drift(
             continue
 
         actual_available = True
-        actual = original_df.loc[mask, column].astype(float)
-        predicted = projected_df.loc[mask, column].astype(float)
+        actual = original_df.loc[mask, column].astype(float).to_numpy()
+        predicted = projected_df.loc[mask, column].astype(float).to_numpy()
         error = predicted - actual
         mae = float(np.mean(np.abs(error)))
-        mape = float(np.mean(np.abs(error) / (np.abs(actual) + 1e-6)))
+        mape = float(np.mean(np.abs(error) / (np.maximum(np.abs(actual), 1.0))))
         rmse = float(np.sqrt(np.mean(error**2)))
         p10 = float(np.percentile(error, 10))
         p90 = float(np.percentile(error, 90))
+        latest_month = projected_df.loc[mask, "month"].max()
+
+        source_col = f"{column}_proj_source"
+        source_counts = projected_df.loc[mask, source_col].value_counts(normalize=True)
         diagnostics[column] = {
             "count": int(mask.sum()),
             "mae": mae,
@@ -212,6 +229,9 @@ def collect_projection_drift(
             "rmse": rmse,
             "p10": p10,
             "p90": p90,
+            "proj_source_3_ratio": float(source_counts.get(3, 0.0)),
+            "proj_source_4_ratio": float(source_counts.get(4, 0.0)),
+            "latest_month": latest_month.strftime("%Y-%m-%d"),
         }
 
     result = {

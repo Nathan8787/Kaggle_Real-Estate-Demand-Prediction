@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from src.metrics_v3 import competition_metric, competition_score
 
